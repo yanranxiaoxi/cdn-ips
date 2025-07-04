@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "CommonJS",
+		"outDir": "./dist",
+		"strict": true,
+		"esModuleInterop": true,
+		"baseUrl": "./", // 设置基础路径
+		"paths": {}
+	},
+	"include": [
+		"src/**/*"
+	]
+}

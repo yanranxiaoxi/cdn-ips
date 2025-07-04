@@ -1,0 +1,6 @@
+/dist/
+/logs/
+/node_modules/
+/.eslintcache
+/.gitlab-ci.yml
+/package-lock.json

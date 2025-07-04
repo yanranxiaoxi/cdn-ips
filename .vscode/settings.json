@@ -1,0 +1,13 @@
+{
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"eslint.validate": ["javascript", "typescript"],
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"prettier.requireConfig": true,
+	"files.associations": {
+		"*.json": "jsonc"
+	},
+	"cSpell.words": ["Fastly"]
+}
