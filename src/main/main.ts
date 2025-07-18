@@ -26,6 +26,7 @@ export enum EVersion {
 export enum EFormat {
 	// JSON = 'json',
 	JSON_ARRAY = 'json-array',
+	JSON_ARRAY_LIKE = 'json-array-like',
 	COMMA = 'comma',
 	SPACE = 'space',
 	LINE = 'line',
@@ -76,6 +77,9 @@ export function transformData(data: Array<string>, format: EFormat): string {
 		}
 		case EFormat.LINE: {
 			return data.join('\n');
+		}
+		case EFormat.JSON_ARRAY_LIKE: {
+			return `${data.map((item) => `"${item}"`).join(',')}`;
 		}
 		case EFormat.JSON_ARRAY:
 		default: {
