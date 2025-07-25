@@ -1,5 +1,5 @@
 FROM docker.io/library/node:24-alpine
-LABEL maintainer="XiaoXi <admin@soraharu.com>""
+LABEL maintainer="XiaoXi <admin@soraharu.com>"
 ENV ENV_PRODUCT=true
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=3001
