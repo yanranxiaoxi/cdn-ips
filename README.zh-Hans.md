@@ -23,6 +23,9 @@ export enum EProviders {
 	CLOUDFLARE = 'Cloudflare',
 	EDGEONE = 'EdgeOne',
 	FASTLY = 'Fastly',
+	GCORE = 'Gcore',
+	BUNNY = 'Bunny',
+	CLOUDFRONT = 'CloudFront',
 	ALL = 'all',
 }
 
@@ -57,4 +60,4 @@ JSON 格式
 
 镜像：[docker.io/yanranxiaoxi/cdn-ips](https://hub.docker.com/r/yanranxiaoxi/cdn-ips)
 
-可用标签：`stable`
+可用标签：`latest`

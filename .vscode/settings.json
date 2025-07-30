@@ -9,5 +9,5 @@
 	"files.associations": {
 		"*.json": "jsonc"
 	},
-	"cSpell.words": ["Fastly"]
+	"cSpell.words": ["EDGEONE", "Fastly", "Gcore"]
 }

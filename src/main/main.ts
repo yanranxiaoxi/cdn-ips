@@ -1,4 +1,10 @@
 import {
+	flushBunny,
+	flushBunnyV4,
+	flushBunnyV6,
+	flushCloudFront,
+	flushCloudFrontV4,
+	flushCloudFrontV6,
 	flushCloudflare,
 	flushCloudflareV4,
 	flushCloudflareV6,
@@ -8,6 +14,9 @@ import {
 	flushFastly,
 	flushFastlyV4,
 	flushFastlyV6,
+	flushGcore,
+	flushGcoreV4,
+	flushGcoreV6,
 } from './flushData';
 import { getCachedData } from './getCachedData';
 
@@ -15,6 +24,9 @@ export enum EProviders {
 	CLOUDFLARE = 'Cloudflare',
 	EDGEONE = 'EdgeOne',
 	FASTLY = 'Fastly',
+	GCORE = 'Gcore',
+	BUNNY = 'Bunny',
+	CLOUDFRONT = 'CloudFront',
 	ALL = 'all',
 }
 
@@ -35,6 +47,9 @@ export enum EFormat {
 
 export async function getData(providers: Array<EProviders>, version: EVersion): Promise<Array<string>> {
 	const returns: Array<string> = [];
+	if (providers.length === 1 && providers[0] === EProviders.ALL) {
+		providers = [EProviders.CLOUDFLARE, EProviders.EDGEONE, EProviders.FASTLY, EProviders.GCORE, EProviders.BUNNY, EProviders.CLOUDFRONT];
+	}
 
 	for (const provider of providers) {
 		switch (provider) {
@@ -56,26 +71,23 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.ALL && returns.push(...(await getCachedData('Fastly', flushFastly)));
 				break;
 			}
-			case EProviders.ALL:
-			default: {
-				version === EVersion.V4 &&
-					returns.push(
-						...(await getCachedData('CloudflareV4', flushCloudflareV4)),
-						...(await getCachedData('EdgeOneV4', flushEdgeOneV4)),
-						...(await getCachedData('FastlyV4', flushFastlyV4)),
-					);
-				version === EVersion.V6 &&
-					returns.push(
-						...(await getCachedData('CloudflareV6', flushCloudflareV6)),
-						...(await getCachedData('EdgeOneV6', flushEdgeOneV6)),
-						...(await getCachedData('FastlyV6', flushFastlyV6)),
-					);
-				version === EVersion.ALL &&
-					returns.push(
-						...(await getCachedData('Cloudflare', flushCloudflare)),
-						...(await getCachedData('EdgeOne', flushEdgeOne)),
-						...(await getCachedData('Fastly', flushFastly)),
-					);
+			case EProviders.GCORE: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('GcoreV4', flushGcoreV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('GcoreV6', flushGcoreV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('Gcore', flushGcore)));
+				break;
+			}
+			case EProviders.BUNNY: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('BunnyV4', flushBunnyV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('BunnyV6', flushBunnyV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('Bunny', flushBunny)));
+				break;
+			}
+			case EProviders.CLOUDFRONT: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('CloudFrontV4', flushCloudFrontV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('CloudFrontV6', flushCloudFrontV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('CloudFront', flushCloudFront)));
+				break;
 			}
 		}
 	}
