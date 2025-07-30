@@ -26,6 +26,8 @@ export enum EProviders {
 	GCORE = 'Gcore',
 	BUNNY = 'Bunny',
 	CLOUDFRONT = 'CloudFront',
+	KEYCDN = 'KeyCDN',
+	QUIC_CLOUD = 'QUICcloud',
 	ALL = 'all',
 }
 
