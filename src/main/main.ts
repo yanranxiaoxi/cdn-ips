@@ -17,6 +17,9 @@ import {
 	flushGcore,
 	flushGcoreV4,
 	flushGcoreV6,
+	flushKeyCDN,
+	flushKeyCDNV4,
+	flushKeyCDNV6,
 } from './flushData';
 import { getCachedData } from './getCachedData';
 
@@ -27,6 +30,7 @@ export enum EProviders {
 	GCORE = 'Gcore',
 	BUNNY = 'Bunny',
 	CLOUDFRONT = 'CloudFront',
+	KEYCDN = 'KeyCDN',
 	ALL = 'all',
 }
 
@@ -48,7 +52,15 @@ export enum EFormat {
 export async function getData(providers: Array<EProviders>, version: EVersion): Promise<Array<string>> {
 	const returns: Array<string> = [];
 	if (providers.length === 1 && providers[0] === EProviders.ALL) {
-		providers = [EProviders.CLOUDFLARE, EProviders.EDGEONE, EProviders.FASTLY, EProviders.GCORE, EProviders.BUNNY, EProviders.CLOUDFRONT];
+		providers = [
+			EProviders.CLOUDFLARE,
+			EProviders.EDGEONE,
+			EProviders.FASTLY,
+			EProviders.GCORE,
+			EProviders.BUNNY,
+			EProviders.CLOUDFRONT,
+			EProviders.KEYCDN,
+		];
 	}
 
 	for (const provider of providers) {
@@ -87,6 +99,12 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.V4 && returns.push(...(await getCachedData('CloudFrontV4', flushCloudFrontV4)));
 				version === EVersion.V6 && returns.push(...(await getCachedData('CloudFrontV6', flushCloudFrontV6)));
 				version === EVersion.ALL && returns.push(...(await getCachedData('CloudFront', flushCloudFront)));
+				break;
+			}
+			case EProviders.KEYCDN: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('KeyCDNV4', flushKeyCDNV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('KeyCDNV6', flushKeyCDNV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('KeyCDN', flushKeyCDN)));
 				break;
 			}
 		}

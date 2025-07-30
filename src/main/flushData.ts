@@ -244,3 +244,57 @@ export async function flushCloudFront(): Promise<Array<string>> {
 		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
 	);
 }
+
+export async function flushKeyCDNV4(): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get('KeyCDNV4');
+	if (data) return data;
+
+	await flushKeyCDN(); // 确保 KeyCDN 数据已缓存
+	const returns: Array<string> | undefined = cache.get('KeyCDNV4');
+	if (returns) {
+		return returns;
+	}
+	throw new BasicException(
+		BasicExceptionCode.InternalServerError,
+		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	);
+}
+
+export async function flushKeyCDNV6(): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get('KeyCDNV6');
+	if (data) return data;
+
+	await flushKeyCDN(); // 确保 KeyCDN 数据已缓存
+	const returns: Array<string> | undefined = cache.get('KeyCDNV6');
+	if (returns) {
+		return returns;
+	}
+	throw new BasicException(
+		BasicExceptionCode.InternalServerError,
+		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	);
+}
+
+export async function flushKeyCDN(): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get('KeyCDN');
+	if (data) return data;
+
+	logger.info('Fetch:', 'https://www.keycdn.com/shield-prefixes.json');
+	const getResult = await httpGet('https://www.keycdn.com/shield-prefixes.json');
+	if (getResult) {
+		const getResultObject: { prefixes: Array<string> } = JSON.parse(getResult);
+		const returns = Array.from(new Set([...getResultObject.prefixes]));
+		cache.set('KeyCDN', returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set('KeyCDNOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set('KeyCDNV4', returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set('KeyCDNV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		// KeyCDN 没有提供回源 IPv6 列表
+		cache.set('KeyCDNV6', [], 60 * 60 * 24); // 缓存 24 小时
+		cache.set('KeyCDNV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		return returns;
+	}
+	throw new BasicException(
+		BasicExceptionCode.InternalServerError,
+		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	);
+}
