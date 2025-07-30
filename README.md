@@ -28,6 +28,7 @@ export enum EProviders {
 	CLOUDFRONT = 'CloudFront',
 	KEYCDN = 'KeyCDN',
 	QUIC_CLOUD = 'QUICcloud',
+	CACHEFLY = 'CacheFly',
 	ALL = 'all',
 }
 

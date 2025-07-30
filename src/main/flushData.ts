@@ -166,7 +166,7 @@ export async function flushGcore(): Promise<Array<string>> {
 }
 
 export async function flushBunnyV4(): Promise<Array<string>> {
-	return await getByLines('Bunny', 'https://api.bunny.net/system/edgeserverlist/plain');
+	return await getByLines('BunnyV4', 'https://api.bunny.net/system/edgeserverlist/plain');
 }
 
 export async function flushBunnyV6(): Promise<Array<string>> {
@@ -177,18 +177,7 @@ export async function flushBunnyV6(): Promise<Array<string>> {
 }
 
 export async function flushBunny(): Promise<Array<string>> {
-	const v4 = await flushBunnyV4();
-	const v6 = await flushBunnyV6();
-	if (v4 && v6) {
-		const returns = Array.from(new Set([...v4, ...v6]));
-		cache.set('Bunny', returns, 60 * 60 * 4); // 缓存 4 小时
-		cache.set('BunnyOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getByLines('Bunny', 'https://api.bunny.net/system/edgeserverlist/plain');
 }
 
 export async function flushCloudFrontV4(): Promise<Array<string>> {
@@ -309,4 +298,19 @@ export async function flushQUICcloudV6(): Promise<Array<string>> {
 
 export async function flushQUICcloud(): Promise<Array<string>> {
 	return await getByLines('QUICcloud', 'https://www.quic.cloud/ips-all');
+}
+
+export async function flushCacheFlyV4(): Promise<Array<string>> {
+	return await getByLines('CacheFlyV4', 'https://cachefly.cachefly.net/ips/rproxy.txt');
+}
+
+export async function flushCacheFlyV6(): Promise<Array<string>> {
+	// CacheFly 没有提供回源 IPv6 列表
+	cache.set('CacheFlyV6', [], 60 * 60 * 24); // 缓存 24 小时
+	cache.set('CacheFlyV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
+	return [];
+}
+
+export async function flushCacheFly(): Promise<Array<string>> {
+	return await getByLines('CacheFly', 'https://cachefly.cachefly.net/ips/rproxy.txt');
 }
