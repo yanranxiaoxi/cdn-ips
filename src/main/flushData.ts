@@ -298,3 +298,15 @@ export async function flushKeyCDN(): Promise<Array<string>> {
 		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
 	);
 }
+
+export async function flushQUICcloudV4(): Promise<Array<string>> {
+	return await getByLines('QUICcloudV4', 'https://www.quic.cloud/ips-v4');
+}
+
+export async function flushQUICcloudV6(): Promise<Array<string>> {
+	return await getByLines('QUICcloudV6', 'https://www.quic.cloud/ips-v6');
+}
+
+export async function flushQUICcloud(): Promise<Array<string>> {
+	return await getByLines('QUICcloud', 'https://www.quic.cloud/ips-all');
+}

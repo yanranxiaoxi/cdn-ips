@@ -20,6 +20,9 @@ import {
 	flushKeyCDN,
 	flushKeyCDNV4,
 	flushKeyCDNV6,
+	flushQUICcloud,
+	flushQUICcloudV4,
+	flushQUICcloudV6,
 } from './flushData';
 import { getCachedData } from './getCachedData';
 
@@ -31,6 +34,7 @@ export enum EProviders {
 	BUNNY = 'Bunny',
 	CLOUDFRONT = 'CloudFront',
 	KEYCDN = 'KeyCDN',
+	QUIC_CLOUD = 'QUICcloud',
 	ALL = 'all',
 }
 
@@ -60,6 +64,7 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 			EProviders.BUNNY,
 			EProviders.CLOUDFRONT,
 			EProviders.KEYCDN,
+			EProviders.QUIC_CLOUD,
 		];
 	}
 
@@ -105,6 +110,12 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.V4 && returns.push(...(await getCachedData('KeyCDNV4', flushKeyCDNV4)));
 				version === EVersion.V6 && returns.push(...(await getCachedData('KeyCDNV6', flushKeyCDNV6)));
 				version === EVersion.ALL && returns.push(...(await getCachedData('KeyCDN', flushKeyCDN)));
+				break;
+			}
+			case EProviders.QUIC_CLOUD: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('QUICcloudV4', flushQUICcloudV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('QUICcloudV6', flushQUICcloudV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('QUICcloud', flushQUICcloud)));
 				break;
 			}
 		}
