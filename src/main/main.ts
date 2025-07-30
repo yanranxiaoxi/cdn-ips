@@ -1,14 +1,15 @@
 import {
-	getCloudflare,
-	getCloudflareV4,
-	getCloudflareV6,
-	getEdgeOne,
-	getEdgeOneV4,
-	getEdgeOneV6,
-	getFastly,
-	getFastlyV4,
-	getFastlyV6,
-} from './getData';
+	flushCloudflare,
+	flushCloudflareV4,
+	flushCloudflareV6,
+	flushEdgeOne,
+	flushEdgeOneV4,
+	flushEdgeOneV6,
+	flushFastly,
+	flushFastlyV4,
+	flushFastlyV6,
+} from './flushData';
+import { getCachedData } from './getCachedData';
 
 export enum EProviders {
 	CLOUDFLARE = 'Cloudflare',
@@ -38,28 +39,43 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 	for (const provider of providers) {
 		switch (provider) {
 			case EProviders.CLOUDFLARE: {
-				version === EVersion.V4 && returns.push(...(await getCloudflareV4()));
-				version === EVersion.V6 && returns.push(...(await getCloudflareV6()));
-				version === EVersion.ALL && returns.push(...(await getCloudflare()));
+				version === EVersion.V4 && returns.push(...(await getCachedData('CloudflareV4', flushCloudflareV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('CloudflareV6', flushCloudflareV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('Cloudflare', flushCloudflare)));
 				break;
 			}
 			case EProviders.EDGEONE: {
-				version === EVersion.V4 && returns.push(...(await getEdgeOneV4()));
-				version === EVersion.V6 && returns.push(...(await getEdgeOneV6()));
-				version === EVersion.ALL && returns.push(...(await getEdgeOne()));
+				version === EVersion.V4 && returns.push(...(await getCachedData('EdgeOneV4', flushEdgeOneV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('EdgeOneV6', flushEdgeOneV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('EdgeOne', flushEdgeOne)));
 				break;
 			}
 			case EProviders.FASTLY: {
-				version === EVersion.V4 && returns.push(...(await getFastlyV4()));
-				version === EVersion.V6 && returns.push(...(await getFastlyV6()));
-				version === EVersion.ALL && returns.push(...(await getFastly()));
+				version === EVersion.V4 && returns.push(...(await getCachedData('FastlyV4', flushFastlyV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('FastlyV6', flushFastlyV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('Fastly', flushFastly)));
 				break;
 			}
 			case EProviders.ALL:
 			default: {
-				version === EVersion.V4 && returns.push(...(await getCloudflareV4()), ...(await getEdgeOneV4()), ...(await getFastlyV4()));
-				version === EVersion.V6 && returns.push(...(await getCloudflareV6()), ...(await getEdgeOneV6()), ...(await getFastlyV6()));
-				version === EVersion.ALL && returns.push(...(await getCloudflare()), ...(await getEdgeOne()), ...(await getFastly()));
+				version === EVersion.V4 &&
+					returns.push(
+						...(await getCachedData('CloudflareV4', flushCloudflareV4)),
+						...(await getCachedData('EdgeOneV4', flushEdgeOneV4)),
+						...(await getCachedData('FastlyV4', flushFastlyV4)),
+					);
+				version === EVersion.V6 &&
+					returns.push(
+						...(await getCachedData('CloudflareV6', flushCloudflareV6)),
+						...(await getCachedData('EdgeOneV6', flushEdgeOneV6)),
+						...(await getCachedData('FastlyV6', flushFastlyV6)),
+					);
+				version === EVersion.ALL &&
+					returns.push(
+						...(await getCachedData('Cloudflare', flushCloudflare)),
+						...(await getCachedData('EdgeOne', flushEdgeOne)),
+						...(await getCachedData('Fastly', flushFastly)),
+					);
 			}
 		}
 	}

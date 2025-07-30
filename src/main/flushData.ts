@@ -15,7 +15,7 @@ async function getByLines(name: string, url: string): Promise<Array<string>> {
 	if (getResult) {
 		const returns = multiLineStrToArray(getResult);
 		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set(name + 'Optimism', returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
 	}
 	throw new BasicException(
@@ -50,7 +50,7 @@ export async function flushCloudflare(): Promise<Array<string>> {
 	if (v4 && v6) {
 		const returns = Array.from(new Set([...v4, ...v6]));
 		cache.set('Cloudflare', returns, 60 * 60 * 4); // 缓存 4 小时
-		cache.set('CloudflareOptimism', returns, 60 * 60 * 4); // 缓存 4 小时
+		cache.set('CloudflareOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
 	}
 	throw new BasicException(
@@ -99,11 +99,11 @@ export async function flushFastly(): Promise<Array<string>> {
 		const getResultObject: { addresses: Array<string>; ipv6_addresses: Array<string> } = JSON.parse(getResult);
 		const returns = Array.from(new Set([...getResultObject.addresses, ...getResultObject.ipv6_addresses]));
 		cache.set('Fastly', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyOptimism', returns, 60 * 60 * 24); // 缓存 4 小时
+		cache.set('FastlyOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		cache.set('FastlyV4', getResultObject.addresses, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyV4Optimism', returns, 60 * 60 * 24); // 缓存 4 小时
+		cache.set('FastlyV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		cache.set('FastlyV6', getResultObject.ipv6_addresses, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyV6Optimism', returns, 60 * 60 * 24); // 缓存 4 小时
+		cache.set('FastlyV6Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
 	}
 	throw new BasicException(
