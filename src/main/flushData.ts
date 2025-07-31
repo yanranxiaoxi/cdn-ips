@@ -282,3 +282,15 @@ export async function flushCDN77(): Promise<Array<string>> {
 		return data.prefix;
 	});
 }
+
+export async function flushArvancloudV4(): Promise<Array<string>> {
+	return await getByLines('ArvancloudV4', 'https://www.arvancloud.ir/en/ips.txt');
+}
+
+export async function flushArvancloudV6(): Promise<Array<string>> {
+	return returnBlank('ArvancloudV6'); // Arvancloud 没有提供回源 IPv6 列表
+}
+
+export async function flushArvancloud(): Promise<Array<string>> {
+	return await getFromSub('Arvancloud', flushArvancloudV4, flushArvancloudV6);
+}

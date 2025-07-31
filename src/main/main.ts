@@ -2,6 +2,9 @@ import {
 	flushAkamai,
 	flushAkamaiV4,
 	flushAkamaiV6,
+	flushArvancloud,
+	flushArvancloudV4,
+	flushArvancloudV6,
 	flushBunny,
 	flushBunnyV4,
 	flushBunnyV6,
@@ -51,6 +54,7 @@ export enum EProviders {
 	AKAMAI = 'Akamai',
 	GoogleCloud = 'GoogleCloud',
 	CDN77 = 'CDN77',
+	ARVANCLOUD = 'Arvancloud',
 	ALL = 'all',
 }
 
@@ -85,6 +89,7 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 			EProviders.AKAMAI,
 			EProviders.GoogleCloud,
 			EProviders.CDN77,
+			EProviders.ARVANCLOUD,
 		];
 	}
 
@@ -160,6 +165,12 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.V4 && returns.push(...(await getCachedData('CDN77V4', flushCDN77V4)));
 				version === EVersion.V6 && returns.push(...(await getCachedData('CDN77V6', flushCDN77V6)));
 				version === EVersion.ALL && returns.push(...(await getCachedData('CDN77', flushCDN77)));
+				break;
+			}
+			case EProviders.ARVANCLOUD: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('ArvancloudV4', flushArvancloudV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('ArvancloudV6', flushArvancloudV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('Arvancloud', flushArvancloud)));
 				break;
 			}
 		}

@@ -9,5 +9,5 @@
 	"files.associations": {
 		"*.json": "jsonc"
 	},
-	"cSpell.words": ["CACHEFLY", "EDGEONE", "Fastly", "Gcore", "KEYCDN"]
+	"cSpell.words": ["Arvancloud", "CACHEFLY", "EDGEONE", "Fastly", "Gcore", "KEYCDN"]
 }

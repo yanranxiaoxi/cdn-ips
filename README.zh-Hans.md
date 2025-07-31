@@ -32,6 +32,7 @@ export enum EProviders {
 	AKAMAI = 'Akamai',
 	GoogleCloud = 'GoogleCloud',
 	CDN77 = 'CDN77',
+	ARVANCLOUD = 'Arvancloud',
 	ALL = 'all',
 }
 
