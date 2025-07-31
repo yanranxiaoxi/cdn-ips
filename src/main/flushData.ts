@@ -1,10 +1,26 @@
 import NodeCache from '@cacheable/node-cache';
+import dns from 'node:dns/promises';
 
 import { BasicException, BasicExceptionCode } from '../exceptions/basic.exception';
 import logger from '../utils/logger';
 import { httpGet, multiLineStrToArray } from '../utils/utils';
 
 const cache = new NodeCache();
+
+function throwError(name: string): any {
+	throw new BasicException(
+		BasicExceptionCode.InternalServerError,
+		'Get ' +
+			name +
+			" CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	);
+}
+
+function returnBlank(name: string): Array<string> {
+	cache.set(name, [], 60 * 60 * 24); // 缓存 24 小时
+	cache.set(name + 'Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
+	return [];
+}
 
 async function getByLines(name: string, url: string): Promise<Array<string>> {
 	const data: Array<string> | undefined = cache.get(name);
@@ -18,10 +34,62 @@ async function getByLines(name: string, url: string): Promise<Array<string>> {
 		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
 	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return throwError(name);
+}
+
+async function getByJson(name: string, url: string, v4Keys: Array<string>, v6Keys: Array<string>): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get(name);
+	if (data) return data;
+
+	logger.info('Fetch:', url);
+	const getResult = await httpGet(url);
+	if (getResult) {
+		const getResultObject: { [key: string]: Array<string> } = JSON.parse(getResult);
+
+		function getResultObjectByKeys(keys: Array<string>): Array<string> {
+			const result: Array<string> = [];
+			for (const key of keys) {
+				if (getResultObject[key]) {
+					result.push(...getResultObject[key]);
+				}
+			}
+			return result;
+		}
+
+		const v4Returns = getResultObjectByKeys(v4Keys);
+		const v6Returns = getResultObjectByKeys(v6Keys);
+		const returns = [...v4Returns, ...v6Returns];
+		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set(name + 'V4', v4Returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set(name + 'V4Optimism', v4Returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set(name + 'V6', v6Returns, 60 * 60 * 24); // 缓存 24 小时
+		cache.set(name + 'V6Optimism', v6Returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		return returns;
+	}
+	return throwError(name);
+}
+
+async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn: () => Promise<Array<string>>): Promise<Array<string>> {
+	const v4 = await v4Fn();
+	const v6 = await v6Fn();
+	if (v4 && v6) {
+		const returns = Array.from(new Set([...v4, ...v6]));
+		cache.set(name, returns, 60 * 60 * 4); // 缓存 4 小时
+		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		return returns;
+	}
+	return throwError(name);
+}
+
+async function getFromParent(name: string, parentFn: () => Promise<Array<string>>): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get(name);
+	if (data) return data;
+
+	await parentFn(); // 确保数据已缓存
+	const returns: Array<string> | undefined = cache.get(name);
+	if (returns) return returns;
+	return throwError(name);
 }
 
 export async function flushEdgeOneV4(): Promise<Array<string>> {
@@ -45,124 +113,31 @@ export async function flushCloudflareV6(): Promise<Array<string>> {
 }
 
 export async function flushCloudflare(): Promise<Array<string>> {
-	const v4 = await flushCloudflareV4();
-	const v6 = await flushCloudflareV6();
-	if (v4 && v6) {
-		const returns = Array.from(new Set([...v4, ...v6]));
-		cache.set('Cloudflare', returns, 60 * 60 * 4); // 缓存 4 小时
-		cache.set('CloudflareOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromSub('Cloudflare', flushCloudflareV4, flushCloudflareV6);
 }
 
 export async function flushFastlyV4(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('FastlyV4');
-	if (data) return data;
-
-	await flushFastly(); // 确保 Fastly 数据已缓存
-	const returns: Array<string> | undefined = cache.get('FastlyV4');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('FastlyV4', flushFastly);
 }
 
 export async function flushFastlyV6(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('FastlyV6');
-	if (data) return data;
-
-	await flushFastly(); // 确保 Fastly 数据已缓存
-	const returns: Array<string> | undefined = cache.get('FastlyV6');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('FastlyV6', flushFastly);
 }
 
 export async function flushFastly(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('Fastly');
-	if (data) return data;
-
-	logger.info('Fetch:', 'https://api.fastly.com/public-ip-list');
-	const getResult = await httpGet('https://api.fastly.com/public-ip-list');
-	if (getResult) {
-		const getResultObject: { addresses: Array<string>; ipv6_addresses: Array<string> } = JSON.parse(getResult);
-		const returns = Array.from(new Set([...getResultObject.addresses, ...getResultObject.ipv6_addresses]));
-		cache.set('Fastly', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('FastlyV4', getResultObject.addresses, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyV4Optimism', getResultObject.addresses, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('FastlyV6', getResultObject.ipv6_addresses, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('FastlyV6Optimism', getResultObject.ipv6_addresses, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getByJson('Fastly', 'https://api.fastly.com/public-ip-list', ['addresses'], ['ipv6_addresses']);
 }
 
 export async function flushGcoreV4(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('GcoreV4');
-	if (data) return data;
-
-	await flushGcore(); // 确保 Gcore 数据已缓存
-	const returns: Array<string> | undefined = cache.get('GcoreV4');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('GcoreV4', flushGcore);
 }
 
 export async function flushGcoreV6(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('GcoreV6');
-	if (data) return data;
-
-	await flushGcore(); // 确保 Gcore 数据已缓存
-	const returns: Array<string> | undefined = cache.get('GcoreV6');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('GcoreV6', flushGcore);
 }
 
 export async function flushGcore(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('Gcore');
-	if (data) return data;
-
-	logger.info('Fetch:', 'https://api.gcore.com/cdn/public-ip-list');
-	const getResult = await httpGet('https://api.gcore.com/cdn/public-ip-list');
-	if (getResult) {
-		const getResultObject: { addresses: Array<string>; addresses_v6: Array<string> } = JSON.parse(getResult);
-		const returns = Array.from(new Set([...getResultObject.addresses, ...getResultObject.addresses_v6]));
-		cache.set('Gcore', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('GcoreOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('GcoreV4', getResultObject.addresses, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('GcoreV4Optimism', getResultObject.addresses, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('GcoreV6', getResultObject.addresses_v6, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('GcoreV6Optimism', getResultObject.addresses_v6, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getByJson('Gcore', 'https://api.gcore.com/cdn/public-ip-list', ['addresses'], ['addresses_v6']);
 }
 
 export async function flushBunnyV4(): Promise<Array<string>> {
@@ -170,122 +145,40 @@ export async function flushBunnyV4(): Promise<Array<string>> {
 }
 
 export async function flushBunnyV6(): Promise<Array<string>> {
-	// Bunny 没有提供回源 IPv6 列表
-	cache.set('BunnyV6', [], 60 * 60 * 24); // 缓存 24 小时
-	cache.set('BunnyV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
-	return [];
+	return returnBlank('BunnyV6'); // Bunny 没有提供回源 IPv6 列表
 }
 
 export async function flushBunny(): Promise<Array<string>> {
-	return await getByLines('Bunny', 'https://api.bunny.net/system/edgeserverlist/plain');
+	return await getFromSub('Bunny', flushBunnyV4, flushBunnyV6);
 }
 
 export async function flushCloudFrontV4(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('CloudFrontV4');
-	if (data) return data;
-
-	await flushCloudFront(); // 确保 CloudFront 数据已缓存
-	const returns: Array<string> | undefined = cache.get('CloudFrontV4');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('CloudFrontV4', flushCloudFront);
 }
 
 export async function flushCloudFrontV6(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('CloudFrontV6');
-	if (data) return data;
-
-	await flushCloudFront(); // 确保 CloudFront 数据已缓存
-	const returns: Array<string> | undefined = cache.get('CloudFrontV6');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('CloudFrontV6', flushCloudFront);
 }
 
 export async function flushCloudFront(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('CloudFront');
-	if (data) return data;
-
-	logger.info('Fetch:', 'https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips');
-	const getResult = await httpGet('https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips');
-	if (getResult) {
-		const getResultObject: { CLOUDFRONT_GLOBAL_IP_LIST: Array<string>; CLOUDFRONT_REGIONAL_EDGE_IP_LIST: Array<string> } = JSON.parse(getResult);
-		const returns = Array.from(new Set([...getResultObject.CLOUDFRONT_GLOBAL_IP_LIST, ...getResultObject.CLOUDFRONT_REGIONAL_EDGE_IP_LIST]));
-		cache.set('CloudFront', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('CloudFrontOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('CloudFrontV4', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('CloudFrontV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		// CloudFront 没有提供回源 IPv6 列表
-		cache.set('CloudFrontV6', [], 60 * 60 * 24); // 缓存 24 小时
-		cache.set('CloudFrontV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	return await getByJson(
+		'CloudFront',
+		'https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips',
+		['CLOUDFRONT_GLOBAL_IP_LIST', 'CLOUDFRONT_REGIONAL_EDGE_IP_LIST'],
+		[],
 	);
 }
 
 export async function flushKeyCDNV4(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('KeyCDNV4');
-	if (data) return data;
-
-	await flushKeyCDN(); // 确保 KeyCDN 数据已缓存
-	const returns: Array<string> | undefined = cache.get('KeyCDNV4');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('KeyCDNV4', flushKeyCDN);
 }
 
 export async function flushKeyCDNV6(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('KeyCDNV6');
-	if (data) return data;
-
-	await flushKeyCDN(); // 确保 KeyCDN 数据已缓存
-	const returns: Array<string> | undefined = cache.get('KeyCDNV6');
-	if (returns) {
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getFromParent('KeyCDNV6', flushKeyCDN);
 }
 
 export async function flushKeyCDN(): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get('KeyCDN');
-	if (data) return data;
-
-	logger.info('Fetch:', 'https://www.keycdn.com/shield-prefixes.json');
-	const getResult = await httpGet('https://www.keycdn.com/shield-prefixes.json');
-	if (getResult) {
-		const getResultObject: { prefixes: Array<string> } = JSON.parse(getResult);
-		const returns = Array.from(new Set([...getResultObject.prefixes]));
-		cache.set('KeyCDN', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('KeyCDNOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set('KeyCDNV4', returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set('KeyCDNV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		// KeyCDN 没有提供回源 IPv6 列表
-		cache.set('KeyCDNV6', [], 60 * 60 * 24); // 缓存 24 小时
-		cache.set('KeyCDNV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
-	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return await getByJson('KeyCDN', 'https://www.keycdn.com/shield-prefixes.json', ['prefixes'], []);
 }
 
 export async function flushQUICcloudV4(): Promise<Array<string>> {
@@ -305,14 +198,11 @@ export async function flushCacheFlyV4(): Promise<Array<string>> {
 }
 
 export async function flushCacheFlyV6(): Promise<Array<string>> {
-	// CacheFly 没有提供回源 IPv6 列表
-	cache.set('CacheFlyV6', [], 60 * 60 * 24); // 缓存 24 小时
-	cache.set('CacheFlyV6Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
-	return [];
+	return returnBlank('CacheFlyV6'); // CacheFly 没有提供回源 IPv6 列表
 }
 
 export async function flushCacheFly(): Promise<Array<string>> {
-	return await getByLines('CacheFly', 'https://cachefly.cachefly.net/ips/rproxy.txt');
+	return await getFromSub('CacheFly', flushCacheFlyV4, flushCacheFlyV6);
 }
 
 export async function flushAkamaiV4(): Promise<Array<string>> {
@@ -324,16 +214,48 @@ export async function flushAkamaiV6(): Promise<Array<string>> {
 }
 
 export async function flushAkamai(): Promise<Array<string>> {
-	const v4 = await flushAkamaiV4();
-	const v6 = await flushAkamaiV6();
-	if (v4 && v6) {
-		const returns = Array.from(new Set([...v4, ...v6]));
-		cache.set('Akamai', returns, 60 * 60 * 4); // 缓存 4 小时
-		cache.set('AkamaiOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		return returns;
+	return await getFromSub('Akamai', flushAkamaiV4, flushAkamaiV6);
+}
+
+export async function flushGoogleCloudV4(): Promise<Array<string>> {
+	logger.info('Resolve:', '_cloud-eoips.googleusercontent.com');
+	dns.setServers(['8.8.8.8', '8.8.4.4', '[2001:4860:4860::8888]', '[2001:4860:4860::8844]']);
+	const dnsResolvedData: Array<Array<string>> = await dns.resolveTxt('_cloud-eoips.googleusercontent.com');
+	const spfRegex = /^v\=spf1 (.+) (\-|\~)all$/;
+	for (const dataLine of dnsResolvedData) {
+		const regexResult = dataLine.join(' ').match(spfRegex);
+		if (regexResult && regexResult[1]) {
+			const ips = regexResult[1]
+				.split(' ')
+				.filter((item) => item.startsWith('ip4:'))
+				.map((item) => item.slice(4));
+			if (ips.length > 0) {
+				cache.set('GoogleCloudV4', ips, 60 * 60 * 4); // 缓存 4 小时
+				cache.set('GoogleCloudV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+				return ips;
+			} else {
+				// 当长度为 0 时，表示没有找到 IPv4 地址
+				// 这不应该发生，需要记录日志、缩短缓存时间、并使用乐观缓存的数据替代标准缓存
+				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudV4Optimism');
+				if (optimismCacheData) {
+					logger.warn('Google Cloud V4 IPs not found, using optimism cache data instead.');
+					cache.set('GoogleCloudV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
+					return optimismCacheData;
+				} else {
+					// cache.set('GoogleCloudV4', [], 60 * 10); // 缓存 10 分钟
+					// cache.set('GoogleCloudV4Optimism', [], 60 * 10); // 缓存 10 分钟
+					// 乐观缓存也不存在数据时需要抛出异常
+				}
+			}
+		}
 	}
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
-		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+	return throwError('GoogleCloudV4');
+}
+
+export async function flushGoogleCloudV6(): Promise<Array<string>> {
+	return returnBlank('GoogleCloudV6'); // Google Cloud 没有提供回源 IPv6 列表
+}
+
+export async function flushGoogleCloud(): Promise<Array<string>> {
+	return await getFromSub('GoogleCloud', flushGoogleCloudV4, flushGoogleCloudV6);
 }

@@ -23,6 +23,9 @@ import {
 	flushGcore,
 	flushGcoreV4,
 	flushGcoreV6,
+	flushGoogleCloud,
+	flushGoogleCloudV4,
+	flushGoogleCloudV6,
 	flushKeyCDN,
 	flushKeyCDNV4,
 	flushKeyCDNV6,
@@ -43,6 +46,7 @@ export enum EProviders {
 	QUIC_CLOUD = 'QUICcloud',
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
+	GoogleCloud = 'GoogleCloud',
 	ALL = 'all',
 }
 
@@ -75,6 +79,7 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 			EProviders.QUIC_CLOUD,
 			EProviders.CACHEFLY,
 			EProviders.AKAMAI,
+			EProviders.GoogleCloud,
 		];
 	}
 
@@ -138,6 +143,12 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.V4 && returns.push(...(await getCachedData('AkamaiV4', flushAkamaiV4)));
 				version === EVersion.V6 && returns.push(...(await getCachedData('AkamaiV6', flushAkamaiV6)));
 				version === EVersion.ALL && returns.push(...(await getCachedData('Akamai', flushAkamai)));
+				break;
+			}
+			case EProviders.GoogleCloud: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudV4', flushGoogleCloudV4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudV6', flushGoogleCloudV6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloud', flushGoogleCloud)));
 				break;
 			}
 		}
