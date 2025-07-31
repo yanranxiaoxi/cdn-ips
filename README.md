@@ -2,7 +2,7 @@
 
 # Get CDN IPs
 
-Obtaining the CDN provider's return IP address
+Obtaining the CDN provider's back-to-origin IP addresses in the specified format
 
 ## Usage
 
@@ -31,6 +31,7 @@ export enum EProviders {
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
 	GoogleCloud = 'GoogleCloud',
+	CDN77 = 'CDN77',
 	ALL = 'all',
 }
 

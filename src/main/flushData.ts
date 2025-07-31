@@ -37,7 +37,13 @@ async function getByLines(name: string, url: string): Promise<Array<string>> {
 	return throwError(name);
 }
 
-async function getByJson(name: string, url: string, v4Keys: Array<string>, v6Keys: Array<string>): Promise<Array<string>> {
+async function getByJson(
+	name: string,
+	url: string,
+	v4Keys: Array<string>,
+	v6Keys: Array<string>,
+	transFn?: (data: any) => string,
+): Promise<Array<string>> {
 	const data: Array<string> | undefined = cache.get(name);
 	if (data) return data;
 
@@ -50,7 +56,11 @@ async function getByJson(name: string, url: string, v4Keys: Array<string>, v6Key
 			const result: Array<string> = [];
 			for (const key of keys) {
 				if (getResultObject[key]) {
-					result.push(...getResultObject[key]);
+					if (transFn) {
+						result.push(...getResultObject[key].map(transFn));
+					} else {
+						result.push(...getResultObject[key]);
+					}
 				}
 			}
 			return result;
@@ -258,4 +268,17 @@ export async function flushGoogleCloudV6(): Promise<Array<string>> {
 
 export async function flushGoogleCloud(): Promise<Array<string>> {
 	return await getFromSub('GoogleCloud', flushGoogleCloudV4, flushGoogleCloudV6);
+}
+
+export async function flushCDN77V4(): Promise<Array<string>> {
+	return await getFromParent('CDN77V4', flushCDN77);
+}
+
+export async function flushCDN77V6(): Promise<Array<string>> {
+	return await getFromParent('CDN77V6', flushCDN77);
+}
+export async function flushCDN77(): Promise<Array<string>> {
+	return await getByJson('CDN77', 'https://prefixlists.tools.cdn77.com/public_lmax_prefixes.json', ['prefixes'], [], (data: { prefix: string }) => {
+		return data.prefix;
+	});
 }

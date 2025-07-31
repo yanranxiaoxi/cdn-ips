@@ -5,6 +5,9 @@ import {
 	flushBunny,
 	flushBunnyV4,
 	flushBunnyV6,
+	flushCDN77,
+	flushCDN77V4,
+	flushCDN77V6,
 	flushCacheFly,
 	flushCacheFlyV4,
 	flushCacheFlyV6,
@@ -47,6 +50,7 @@ export enum EProviders {
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
 	GoogleCloud = 'GoogleCloud',
+	CDN77 = 'CDN77',
 	ALL = 'all',
 }
 
@@ -80,6 +84,7 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 			EProviders.CACHEFLY,
 			EProviders.AKAMAI,
 			EProviders.GoogleCloud,
+			EProviders.CDN77,
 		];
 	}
 
@@ -149,6 +154,12 @@ export async function getData(providers: Array<EProviders>, version: EVersion): 
 				version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudV4', flushGoogleCloudV4)));
 				version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudV6', flushGoogleCloudV6)));
 				version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloud', flushGoogleCloud)));
+				break;
+			}
+			case EProviders.CDN77: {
+				version === EVersion.V4 && returns.push(...(await getCachedData('CDN77V4', flushCDN77V4)));
+				version === EVersion.V6 && returns.push(...(await getCachedData('CDN77V6', flushCDN77V6)));
+				version === EVersion.ALL && returns.push(...(await getCachedData('CDN77', flushCDN77)));
 				break;
 			}
 		}

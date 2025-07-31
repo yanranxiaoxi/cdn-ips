@@ -2,7 +2,7 @@
 
 # Get CDN IPs
 
-获取 CDN 提供商的回源 IP 地址
+以适当的格式获取 CDN 提供商的回源 IP 地址列表
 
 ## 使用
 
@@ -31,6 +31,7 @@ export enum EProviders {
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
 	GoogleCloud = 'GoogleCloud',
+	CDN77 = 'CDN77',
 	ALL = 'all',
 }
 
