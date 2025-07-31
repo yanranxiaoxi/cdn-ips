@@ -314,3 +314,26 @@ export async function flushCacheFlyV6(): Promise<Array<string>> {
 export async function flushCacheFly(): Promise<Array<string>> {
 	return await getByLines('CacheFly', 'https://cachefly.cachefly.net/ips/rproxy.txt');
 }
+
+export async function flushAkamaiV4(): Promise<Array<string>> {
+	return await getByLines('AkamaiV4', 'https://techdocs.akamai.com/property-manager/pdfs/akamai_ipv4_CIDRs.txt');
+}
+
+export async function flushAkamaiV6(): Promise<Array<string>> {
+	return await getByLines('AkamaiV6', 'https://techdocs.akamai.com/property-manager/pdfs/akamai_ipv6_CIDRs.txt');
+}
+
+export async function flushAkamai(): Promise<Array<string>> {
+	const v4 = await flushAkamaiV4();
+	const v6 = await flushAkamaiV6();
+	if (v4 && v6) {
+		const returns = Array.from(new Set([...v4, ...v6]));
+		cache.set('Akamai', returns, 60 * 60 * 4); // 缓存 4 小时
+		cache.set('AkamaiOptimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		return returns;
+	}
+	throw new BasicException(
+		BasicExceptionCode.InternalServerError,
+		"Get CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
+	);
+}

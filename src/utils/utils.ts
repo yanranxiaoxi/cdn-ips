@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 
+import logger from './logger';
+
 export function instanceValue<T>(initializer: () => T) {
 	let firstRun = true;
 	let value: T;
@@ -50,17 +52,20 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 		method: 'GET',
 		cache: 'no-store',
 		redirect: 'follow',
+		headers: {
+			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 cdn-ips/1.0',
+		},
 	};
 	try {
 		const response = await fetch(url, options);
 		if (response.ok) {
 			return await response.text();
 		} else {
-			console.error(`HTTP GET failed: ${response.status} ${response.statusText}`);
+			logger.error('HTTP GET failed:', response.status, response.statusText);
 			return undefined;
 		}
 	} catch (error) {
-		console.error(`HTTP GET error: ${error}`);
+		logger.error('HTTP GET failed:', error);
 		return undefined;
 	}
 }
