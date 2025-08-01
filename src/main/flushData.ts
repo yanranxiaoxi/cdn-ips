@@ -30,7 +30,6 @@ async function getByLines(name: string, url: string, ranges?: Array<{ start?: st
 	const getResult = await httpGet(url);
 	if (getResult) {
 		let returns = multiLineStrToArray(getResult);
-		console.log(returns);
 		if (ranges) {
 			const newReturns: Array<string> = [];
 			for (const range of ranges) {

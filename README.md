@@ -49,7 +49,7 @@ export enum EVersion {
 
 export enum EFormat {
 	JSON_ARRAY = 'json-array',
-	JSON_ARRAY_LIKE = 'json-array-like',
+	JSON_ARRAY_WITHOUT_SQUARE_BRACKETS = 'json-array-without-square-brackets',
 	COMMA = 'comma',
 	SPACE = 'space',
 	LINE = 'line',
