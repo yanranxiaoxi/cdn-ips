@@ -237,7 +237,7 @@ async function getPlainObject(providers: Array<EProviders>, version: EVersion): 
 	const returns: Array<string> = [];
 
 	for (const provider of providers) {
-		await getProviderData(provider, version);
+		returns.push(...(await getProviderData(provider, version)));
 	}
 
 	return Array.from(new Set(returns));
