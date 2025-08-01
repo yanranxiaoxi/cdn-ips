@@ -7,29 +7,41 @@ import { httpGet, multiLineStrToArray } from '../utils/utils';
 
 const cache = new NodeCache();
 
-function throwError(name: string): any {
-	throw new BasicException(
-		BasicExceptionCode.InternalServerError,
+function throwError(name: string, message?: string): any {
+	message =
+		message ||
 		'Get ' +
 			name +
-			" CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues",
-	);
+			" CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues";
+	throw new BasicException(BasicExceptionCode.InternalServerError, message);
 }
 
-function returnBlank(name: string): Array<string> {
-	cache.set(name, [], 60 * 60 * 24); // 缓存 24 小时
-	cache.set(name + 'Optimism', [], 60 * 60 * 24 * 7); // 乐观缓存 7 天
-	return [];
+function returnDirectly(name: string, data: Array<string> = []): Array<string> {
+	cache.set(name, data, 60 * 60 * 24); // 缓存 24 小时
+	cache.set(name + 'Optimism', data, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+	return data;
 }
 
-async function getByLines(name: string, url: string): Promise<Array<string>> {
+async function getByLines(name: string, url: string, ranges?: Array<{ start?: string; end?: string }>): Promise<Array<string>> {
 	const data: Array<string> | undefined = cache.get(name);
 	if (data) return data;
 
 	logger.info('Fetch:', url);
 	const getResult = await httpGet(url);
 	if (getResult) {
-		const returns = multiLineStrToArray(getResult);
+		let returns = multiLineStrToArray(getResult);
+		console.log(returns);
+		if (ranges) {
+			const newReturns: Array<string> = [];
+			for (const range of ranges) {
+				const start = range.start ? returns.indexOf(range.start) + 1 : 0;
+				const end = range.end ? returns.indexOf(range.end) : returns.length;
+				if (start >= 0 && end >= 0 && start < end) {
+					newReturns.push(...returns.slice(start, end));
+				}
+			}
+			returns = Array.from(new Set(newReturns)); // 去重
+		}
 		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
 		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
@@ -42,7 +54,8 @@ async function getByJson(
 	url: string,
 	v4Keys: Array<string>,
 	v6Keys: Array<string>,
-	transFn?: (data: any) => string,
+	parentTransFn?: (data: any) => { [key: string]: any },
+	valueTransFn?: (data: any) => string,
 ): Promise<Array<string>> {
 	const data: Array<string> | undefined = cache.get(name);
 	if (data) return data;
@@ -50,14 +63,18 @@ async function getByJson(
 	logger.info('Fetch:', url);
 	const getResult = await httpGet(url);
 	if (getResult) {
-		const getResultObject: { [key: string]: Array<string> } = JSON.parse(getResult);
+		let getResultObject: { [key: string]: any } = JSON.parse(getResult);
+
+		if (parentTransFn) {
+			getResultObject = parentTransFn(getResultObject);
+		}
 
 		function getResultObjectByKeys(keys: Array<string>): Array<string> {
 			const result: Array<string> = [];
 			for (const key of keys) {
 				if (getResultObject[key]) {
-					if (transFn) {
-						result.push(...getResultObject[key].map(transFn));
+					if (valueTransFn) {
+						result.push(...getResultObject[key].map(valueTransFn));
 					} else {
 						result.push(...getResultObject[key]);
 					}
@@ -155,7 +172,7 @@ export async function flushBunnyV4(): Promise<Array<string>> {
 }
 
 export async function flushBunnyV6(): Promise<Array<string>> {
-	return returnBlank('BunnyV6'); // Bunny 没有提供回源 IPv6 列表
+	return returnDirectly('BunnyV6'); // Bunny 没有提供回源 IPv6 列表
 }
 
 export async function flushBunny(): Promise<Array<string>> {
@@ -208,7 +225,7 @@ export async function flushCacheFlyV4(): Promise<Array<string>> {
 }
 
 export async function flushCacheFlyV6(): Promise<Array<string>> {
-	return returnBlank('CacheFlyV6'); // CacheFly 没有提供回源 IPv6 列表
+	return returnDirectly('CacheFlyV6'); // CacheFly 没有提供回源 IPv6 列表
 }
 
 export async function flushCacheFly(): Promise<Array<string>> {
@@ -227,7 +244,7 @@ export async function flushAkamai(): Promise<Array<string>> {
 	return await getFromSub('Akamai', flushAkamaiV4, flushAkamaiV6);
 }
 
-export async function flushGoogleCloudV4(): Promise<Array<string>> {
+export async function flushGoogleCloudCDNV4(): Promise<Array<string>> {
 	logger.info('Resolve:', '_cloud-eoips.googleusercontent.com');
 	dns.setServers(['8.8.8.8', '8.8.4.4', '[2001:4860:4860::8888]', '[2001:4860:4860::8844]']);
 	const dnsResolvedData: Array<Array<string>> = await dns.resolveTxt('_cloud-eoips.googleusercontent.com');
@@ -240,34 +257,48 @@ export async function flushGoogleCloudV4(): Promise<Array<string>> {
 				.filter((item) => item.startsWith('ip4:'))
 				.map((item) => item.slice(4));
 			if (ips.length > 0) {
-				cache.set('GoogleCloudV4', ips, 60 * 60 * 4); // 缓存 4 小时
-				cache.set('GoogleCloudV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+				cache.set('GoogleCloudCDNV4', ips, 60 * 60 * 4); // 缓存 4 小时
+				cache.set('GoogleCloudCDNV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 				return ips;
 			} else {
 				// 当长度为 0 时，表示没有找到 IPv4 地址
 				// 这不应该发生，需要记录日志、缩短缓存时间、并使用乐观缓存的数据替代标准缓存
-				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudV4Optimism');
+				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudCDNV4Optimism');
 				if (optimismCacheData) {
-					logger.warn('Google Cloud V4 IPs not found, using optimism cache data instead.');
-					cache.set('GoogleCloudV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
+					logger.warn('Google Cloud CDN V4 IPs not found, using optimism cache data instead.');
+					cache.set('GoogleCloudCDNV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
 					return optimismCacheData;
 				} else {
-					// cache.set('GoogleCloudV4', [], 60 * 10); // 缓存 10 分钟
-					// cache.set('GoogleCloudV4Optimism', [], 60 * 10); // 缓存 10 分钟
+					// cache.set('GoogleCloudCDNV4', [], 60 * 10); // 缓存 10 分钟
+					// cache.set('GoogleCloudCDNV4Optimism', [], 60 * 10); // 缓存 10 分钟
 					// 乐观缓存也不存在数据时需要抛出异常
 				}
 			}
 		}
 	}
-	return throwError('GoogleCloudV4');
+	return throwError('GoogleCloudCDNV4');
 }
 
-export async function flushGoogleCloudV6(): Promise<Array<string>> {
-	return returnBlank('GoogleCloudV6'); // Google Cloud 没有提供回源 IPv6 列表
+export async function flushGoogleCloudCDNV6(): Promise<Array<string>> {
+	return returnDirectly('GoogleCloudCDNV6'); // Google Cloud 没有提供回源 IPv6 列表
 }
 
-export async function flushGoogleCloud(): Promise<Array<string>> {
-	return await getFromSub('GoogleCloud', flushGoogleCloudV4, flushGoogleCloudV6);
+export async function flushGoogleCloudCDN(): Promise<Array<string>> {
+	return await getFromSub('GoogleCloudCDN', flushGoogleCloudCDNV4, flushGoogleCloudCDNV6);
+}
+
+export async function flushGoogleCloudLoadBalancingV4(): Promise<Array<string>> {
+	// https://cloud.google.com/load-balancing/docs/https#firewall-rules
+	return returnDirectly('GoogleCloudLoadBalancingV4', ['35.191.0.0/16', '130.211.0.0/22', '34.96.0.0/20', '34.127.192.0/18']);
+}
+
+export async function flushGoogleCloudLoadBalancingV6(): Promise<Array<string>> {
+	// https://cloud.google.com/load-balancing/docs/https#firewall-rules
+	return returnDirectly('GoogleCloudLoadBalancingV6', ['2600:2d00:1:b029::/64', '2600:2d00:1:1::/64']);
+}
+
+export async function flushGoogleCloudLoadBalancing(): Promise<Array<string>> {
+	return await getFromSub('GoogleCloudLoadBalancing', flushGoogleCloudLoadBalancingV4, flushGoogleCloudLoadBalancingV6);
 }
 
 export async function flushCDN77V4(): Promise<Array<string>> {
@@ -278,9 +309,16 @@ export async function flushCDN77V6(): Promise<Array<string>> {
 	return await getFromParent('CDN77V6', flushCDN77);
 }
 export async function flushCDN77(): Promise<Array<string>> {
-	return await getByJson('CDN77', 'https://prefixlists.tools.cdn77.com/public_lmax_prefixes.json', ['prefixes'], [], (data: { prefix: string }) => {
-		return data.prefix;
-	});
+	return await getByJson(
+		'CDN77',
+		'https://prefixlists.tools.cdn77.com/public_lmax_prefixes.json',
+		['prefixes'],
+		[],
+		undefined,
+		(data: { prefix: string }) => {
+			return data.prefix;
+		},
+	);
 }
 
 export async function flushArvancloudV4(): Promise<Array<string>> {
@@ -288,9 +326,70 @@ export async function flushArvancloudV4(): Promise<Array<string>> {
 }
 
 export async function flushArvancloudV6(): Promise<Array<string>> {
-	return returnBlank('ArvancloudV6'); // Arvancloud 没有提供回源 IPv6 列表
+	return returnDirectly('ArvancloudV6'); // Arvancloud 没有提供回源 IPv6 列表
 }
 
 export async function flushArvancloud(): Promise<Array<string>> {
 	return await getFromSub('Arvancloud', flushArvancloudV4, flushArvancloudV6);
+}
+
+export async function flushF5CDNV4(): Promise<Array<string>> {
+	return await getByLines('F5CDNV4', 'https://docs.cloud.f5.com/docs-v2/downloads/platform/reference/network-cloud-ref/ips-domains.txt', [
+		{
+			start: '### Public IPv4 Subnet Ranges for F5 Content Distribution Network Services',
+			end: '### Public IPv4 Addresses for F5 Secondary DNS Zone Transfer',
+		},
+	]);
+}
+
+export async function flushF5CDNV6(): Promise<Array<string>> {
+	return returnDirectly('F5CDNV6'); // F5 CDN 没有提供回源 IPv6 列表
+}
+
+export async function flushF5CDN(): Promise<Array<string>> {
+	return await getFromSub('F5CDN', flushF5CDNV4, flushF5CDNV6);
+}
+
+export async function flushImpervaV4(): Promise<Array<string>> {
+	return await getFromParent('ImpervaV4', flushImperva);
+}
+
+export async function flushImpervaV6(): Promise<Array<string>> {
+	return await getFromParent('ImpervaV6', flushImperva);
+}
+
+export async function flushImperva(): Promise<Array<string>> {
+	return await getByJson('Imperva', 'https://my.imperva.com/api/integration/v1/ips', ['ipRanges'], ['ipv6Ranges']);
+}
+
+export async function flushMedianovaV4(): Promise<Array<string>> {
+	return await getFromParent('MedianovaV4', flushMedianova);
+}
+
+export async function flushMedianovaV6(): Promise<Array<string>> {
+	return await getFromParent('MedianovaV6', flushMedianova);
+}
+
+export async function flushMedianova(): Promise<Array<string>> {
+	return await getByJson(
+		'Medianova',
+		'https://cloud.medianova.com/api/v1/ip/blocks-list',
+		['ipv4_cidrs'],
+		['ipv6_cidrs'],
+		(data: { result: { ipv4_cidrs: Array<string>; ipv6_cidrs: Array<string> } }) => {
+			return data.result;
+		},
+	);
+}
+
+export async function flushALTERNcloudCDNV4(): Promise<Array<string>> {
+	return await getFromParent('ALTERNcloudCDNV4', flushALTERNcloudCDN);
+}
+
+export async function flushALTERNcloudCDNV6(): Promise<Array<string>> {
+	return await getFromParent('ALTERNcloudCDNV6', flushALTERNcloudCDN);
+}
+
+export async function flushALTERNcloudCDN(): Promise<Array<string>> {
+	return await getByJson('ALTERNcloudCDN', 'https://api.alt2-cdn.alterncloud.com/cdn/public-ip-list', ['addresses'], ['addresses_v6']);
 }

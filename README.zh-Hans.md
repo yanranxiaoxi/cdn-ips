@@ -30,9 +30,14 @@ export enum EProviders {
 	QUIC_CLOUD = 'QUICcloud',
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
-	GoogleCloud = 'GoogleCloud',
+	GOOGLE_CLOUD_CDN = 'GoogleCloudCDN',
+	GOOGLE_CLOUD_LOAD_BALANCING = 'GoogleCloudLoadBalancing',
 	CDN77 = 'CDN77',
 	ARVANCLOUD = 'Arvancloud',
+	F5_CDN = 'F5CDN',
+	IMPERVA = 'Imperva',
+	MEDIANOVA = 'Medianova',
+	ALTERNCLOUD_CDN = 'ALTERNcloudCDN',
 	ALL = 'all',
 }
 

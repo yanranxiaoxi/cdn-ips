@@ -71,8 +71,9 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 }
 
 /**
- * 将多行字符串拆分成字符串数组并去重
+ * 将多行字符串拆分成字符串数组
  *
+ * @remarks 空行会被忽略
  * @param str - 多行字符串
  * @returns 字符串数组
  */
@@ -83,5 +84,5 @@ export function multiLineStrToArray(str: string): Array<string> {
 			strList.splice(index, 1);
 		}
 	});
-	return Array.from(new Set(strList.map((value) => value.trim())));
+	return strList.map((value) => value.trim());
 }
