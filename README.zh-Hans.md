@@ -16,7 +16,7 @@ GET https://cdn-ips.api.soraharu.com/
 | ----------- | ------------------- | -------------------- |
 | `providers` | `Array<EProviders>` | `Cloudflare,EdgeOne` |
 | `version`   | `EVersion`          | `v4`                 |
-| `format`    | `EFormat`           | `line`               |
+| `format`    | `EFormat`           | `json-transposed`    |
 
 ```typescript
 export enum EProviders {
@@ -38,7 +38,6 @@ export enum EProviders {
 	IMPERVA = 'Imperva',
 	MEDIANOVA = 'Medianova',
 	ALTERNCLOUD_CDN = 'ALTERNcloudCDN',
-	ALL = 'all',
 }
 
 export enum EVersion {
@@ -48,11 +47,15 @@ export enum EVersion {
 }
 
 export enum EFormat {
-	JSON_ARRAY = 'json-array',
-	JSON_ARRAY_WITHOUT_SQUARE_BRACKETS = 'json-array-without-square-brackets',
 	COMMA = 'comma',
 	SPACE = 'space',
 	LINE = 'line',
+	JSON_ARRAY_WITHOUT_SQUARE_BRACKETS = 'json-array-without-square-brackets',
+	JSON = 'json',
+	JSON_TRANSPOSED = 'json-transposed',
+	JSON_WITHOUT_PROVIDERS = 'json-without-providers',
+	JSON_WITHOUT_VERSIONS = 'json-without-versions',
+	JSON_ARRAY = 'json-array',
 }
 ```
 

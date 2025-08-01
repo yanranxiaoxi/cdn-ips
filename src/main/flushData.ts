@@ -5,7 +5,7 @@ import { BasicException, BasicExceptionCode } from '../exceptions/basic.exceptio
 import logger from '../utils/logger';
 import { httpGet, multiLineStrToArray } from '../utils/utils';
 
-const cache = new NodeCache();
+export const cache = new NodeCache();
 
 function throwError(name: string, message?: string): any {
 	message =
@@ -23,9 +23,6 @@ function returnDirectly(name: string, data: Array<string> = []): Array<string> {
 }
 
 async function getByLines(name: string, url: string, ranges?: Array<{ start?: string; end?: string }>): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get(name);
-	if (data) return data;
-
 	logger.info('Fetch:', url);
 	const getResult = await httpGet(url);
 	if (getResult) {
@@ -56,9 +53,6 @@ async function getByJson(
 	parentTransFn?: (data: any) => { [key: string]: any },
 	valueTransFn?: (data: any) => string,
 ): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get(name);
-	if (data) return data;
-
 	logger.info('Fetch:', url);
 	const getResult = await httpGet(url);
 	if (getResult) {
@@ -109,9 +103,6 @@ async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn
 }
 
 async function getFromParent(name: string, parentFn: () => Promise<Array<string>>): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get(name);
-	if (data) return data;
-
 	await parentFn(); // 确保数据已缓存
 	const returns: Array<string> | undefined = cache.get(name);
 	if (returns) return returns;

@@ -1,5 +1,5 @@
 import { BasicException, ParamsExceptionCode } from '../exceptions/basic.exception';
-import { EFormat, EProviders, EVersion, getData, transformData } from '../main/main';
+import { EFormat, EProviders, EVersion, getTransformedData } from '../main/main';
 import { IContext } from '../utils/interface';
 import { Controller } from './controller';
 
@@ -8,9 +8,9 @@ const cache = new Map<string, any>();
 class Main extends Controller {
 	async get(ctx: IContext) {
 		const params = {
-			queryProviders: (ctx.getQuery.get('providers') || EProviders.ALL).split(','),
+			queryProviders: (ctx.getQuery.get('providers') || Object.values(EProviders).join(',')).split(','),
 			queryVersion: ctx.getQuery.get('version') || EVersion.ALL,
-			queryFormat: ctx.getQuery.get('format') || EFormat.LINE,
+			queryFormat: ctx.getQuery.get('format') || EFormat.JSON,
 		};
 
 		const unverified = this.verifyParam(
@@ -37,8 +37,6 @@ class Main extends Controller {
 			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, JSON.stringify(unverified));
 		}
 
-		const allIPsData = await getData(params.queryProviders, params.queryVersion);
-
 		switch (params.queryFormat) {
 			case EFormat.COMMA:
 			case EFormat.LINE:
@@ -47,13 +45,17 @@ class Main extends Controller {
 				ctx.res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 				break;
 			}
+			case EFormat.JSON:
+			case EFormat.JSON_TRANSPOSED:
+			case EFormat.JSON_WITHOUT_PROVIDERS:
+			case EFormat.JSON_WITHOUT_VERSIONS:
 			case EFormat.JSON_ARRAY: {
 				ctx.res.setHeader('Content-Type', 'application/json; charset=utf-8');
 				break;
 			}
 		}
 		ctx.res.setHeader('Cache-Control', 'public, max-age=7200'); // 缓存 2 小时
-		ctx.res.end(transformData(allIPsData, params.queryFormat));
+		ctx.res.end(await getTransformedData(params.queryProviders, params.queryVersion, params.queryFormat));
 	}
 }
 
