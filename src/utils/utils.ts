@@ -61,11 +61,11 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 		if (response.ok) {
 			return await response.text();
 		} else {
-			logger.error('HTTP GET failed:', response.status, response.statusText);
+			logger.error('HTTP GET failed:', url, '\n', response.status, response.statusText);
 			return undefined;
 		}
 	} catch (error) {
-		logger.error('HTTP GET failed:', error);
+		logger.error('HTTP GET failed:', url, '\n', error);
 		return undefined;
 	}
 }
