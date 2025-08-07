@@ -234,7 +234,7 @@ export async function flushAkamai(): Promise<Array<string>> {
 	return await getFromSub('Akamai', flushAkamaiV4, flushAkamaiV6);
 }
 
-export async function flushGoogleCloudCDNV4(): Promise<Array<string>> {
+export async function flushGoogleCloudV4(): Promise<Array<string>> {
 	logger.info('Resolve:', '_cloud-eoips.googleusercontent.com');
 	dns.setServers(['8.8.8.8', '8.8.4.4', '[2001:4860:4860::8888]', '[2001:4860:4860::8844]']);
 	const dnsResolvedData: Array<Array<string>> = await dns.resolveTxt('_cloud-eoips.googleusercontent.com');
@@ -247,34 +247,34 @@ export async function flushGoogleCloudCDNV4(): Promise<Array<string>> {
 				.filter((item) => item.startsWith('ip4:'))
 				.map((item) => item.slice(4));
 			if (ips.length > 0) {
-				cache.set('GoogleCloudCDNV4', ips, 60 * 60 * 4); // 缓存 4 小时
-				cache.set('GoogleCloudCDNV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+				cache.set('GoogleCloudV4', ips, 60 * 60 * 4); // 缓存 4 小时
+				cache.set('GoogleCloudV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 				return ips;
 			} else {
 				// 当长度为 0 时，表示没有找到 IPv4 地址
 				// 这不应该发生，需要记录日志、缩短缓存时间、并使用乐观缓存的数据替代标准缓存
-				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudCDNV4Optimism');
+				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudV4Optimism');
 				if (optimismCacheData) {
-					logger.warn('Google Cloud CDN V4 IPs not found, using optimism cache data instead.');
-					cache.set('GoogleCloudCDNV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
+					logger.warn('Google Cloud V4 IPs not found, using optimism cache data instead.');
+					cache.set('GoogleCloudV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
 					return optimismCacheData;
 				} else {
-					// cache.set('GoogleCloudCDNV4', [], 60 * 10); // 缓存 10 分钟
-					// cache.set('GoogleCloudCDNV4Optimism', [], 60 * 10); // 缓存 10 分钟
+					// cache.set('GoogleCloudV4', [], 60 * 10); // 缓存 10 分钟
+					// cache.set('GoogleCloudV4Optimism', [], 60 * 10); // 缓存 10 分钟
 					// 乐观缓存也不存在数据时需要抛出异常
 				}
 			}
 		}
 	}
-	return throwError('GoogleCloudCDNV4');
+	return throwError('GoogleCloudV4');
 }
 
-export async function flushGoogleCloudCDNV6(): Promise<Array<string>> {
-	return returnDirectly('GoogleCloudCDNV6'); // Google Cloud 没有提供回源 IPv6 列表
+export async function flushGoogleCloudV6(): Promise<Array<string>> {
+	return returnDirectly('GoogleCloudV6'); // Google Cloud 没有提供回源 IPv6 列表
 }
 
-export async function flushGoogleCloudCDN(): Promise<Array<string>> {
-	return await getFromSub('GoogleCloudCDN', flushGoogleCloudCDNV4, flushGoogleCloudCDNV6);
+export async function flushGoogleCloud(): Promise<Array<string>> {
+	return await getFromSub('GoogleCloud', flushGoogleCloudV4, flushGoogleCloudV6);
 }
 
 export async function flushGoogleCloudLoadBalancingV4(): Promise<Array<string>> {
@@ -372,14 +372,14 @@ export async function flushMedianova(): Promise<Array<string>> {
 	);
 }
 
-export async function flushALTERNcloudCDNV4(): Promise<Array<string>> {
-	return await getFromParent('ALTERNcloudCDNV4', flushALTERNcloudCDN);
+export async function flushALTERNcloudV4(): Promise<Array<string>> {
+	return await getFromParent('ALTERNcloudV4', flushALTERNcloud);
 }
 
-export async function flushALTERNcloudCDNV6(): Promise<Array<string>> {
-	return await getFromParent('ALTERNcloudCDNV6', flushALTERNcloudCDN);
+export async function flushALTERNcloudV6(): Promise<Array<string>> {
+	return await getFromParent('ALTERNcloudV6', flushALTERNcloud);
 }
 
-export async function flushALTERNcloudCDN(): Promise<Array<string>> {
-	return await getByJson('ALTERNcloudCDN', 'https://api.alt2-cdn.alterncloud.com/cdn/public-ip-list', ['addresses'], ['addresses_v6']);
+export async function flushALTERNcloud(): Promise<Array<string>> {
+	return await getByJson('ALTERNcloud', 'https://api.alt2-cdn.alterncloud.com/cdn/public-ip-list', ['addresses'], ['addresses_v6']);
 }

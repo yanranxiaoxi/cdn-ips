@@ -1,7 +1,7 @@
 import {
-	flushALTERNcloudCDN,
-	flushALTERNcloudCDNV4,
-	flushALTERNcloudCDNV6,
+	flushALTERNcloud,
+	flushALTERNcloudV4,
+	flushALTERNcloudV6,
 	flushAkamai,
 	flushAkamaiV4,
 	flushAkamaiV6,
@@ -35,12 +35,12 @@ import {
 	flushGcore,
 	flushGcoreV4,
 	flushGcoreV6,
-	flushGoogleCloudCDN,
-	flushGoogleCloudCDNV4,
-	flushGoogleCloudCDNV6,
+	flushGoogleCloud,
 	flushGoogleCloudLoadBalancing,
 	flushGoogleCloudLoadBalancingV4,
 	flushGoogleCloudLoadBalancingV6,
+	flushGoogleCloudV4,
+	flushGoogleCloudV6,
 	flushImperva,
 	flushImpervaV4,
 	flushImpervaV6,
@@ -67,14 +67,14 @@ export enum EProviders {
 	QUIC_CLOUD = 'QUICcloud',
 	CACHEFLY = 'CacheFly',
 	AKAMAI = 'Akamai',
-	GOOGLE_CLOUD_CDN = 'GoogleCloudCDN',
+	GOOGLE_CLOUD = 'GoogleCloud',
 	GOOGLE_CLOUD_LOAD_BALANCING = 'GoogleCloudLoadBalancing',
 	CDN77 = 'CDN77',
 	ARVANCLOUD = 'Arvancloud',
 	F5_CDN = 'F5CDN',
 	IMPERVA = 'Imperva',
 	MEDIANOVA = 'Medianova',
-	ALTERNCLOUD_CDN = 'ALTERNcloudCDN',
+	ALTERNCLOUD = 'ALTERNcloud',
 }
 
 export enum EVersion {
@@ -158,10 +158,10 @@ async function getProviderData(provider: EProviders, version: EVersion): Promise
 			version === EVersion.ALL && returns.push(...(await getCachedData('Akamai', flushAkamai)));
 			break;
 		}
-		case EProviders.GOOGLE_CLOUD_CDN: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudCDNV4', flushGoogleCloudCDNV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudCDNV6', flushGoogleCloudCDNV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloudCDN', flushGoogleCloudCDN)));
+		case EProviders.GOOGLE_CLOUD: {
+			version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudV4', flushGoogleCloudV4)));
+			version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudV6', flushGoogleCloudV6)));
+			version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloud', flushGoogleCloud)));
 			break;
 		}
 		case EProviders.GOOGLE_CLOUD_LOAD_BALANCING: {
@@ -200,10 +200,10 @@ async function getProviderData(provider: EProviders, version: EVersion): Promise
 			version === EVersion.ALL && returns.push(...(await getCachedData('Medianova', flushMedianova)));
 			break;
 		}
-		case EProviders.ALTERNCLOUD_CDN: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('ALTERNcloudCDNV4', flushALTERNcloudCDNV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('ALTERNcloudCDNV6', flushALTERNcloudCDNV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('ALTERNcloudCDN', flushALTERNcloudCDN)));
+		case EProviders.ALTERNCLOUD: {
+			version === EVersion.V4 && returns.push(...(await getCachedData('ALTERNcloudV4', flushALTERNcloudV4)));
+			version === EVersion.V6 && returns.push(...(await getCachedData('ALTERNcloudV6', flushALTERNcloudV6)));
+			version === EVersion.ALL && returns.push(...(await getCachedData('ALTERNcloud', flushALTERNcloud)));
 			break;
 		}
 	}
