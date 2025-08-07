@@ -86,3 +86,128 @@ export function multiLineStrToArray(str: string): Array<string> {
 	});
 	return strList.map((value) => value.trim());
 }
+
+/**
+ * 验证 IPv4 地址格式
+ *
+ * @param ip - IPv4 地址
+ * @returns 验证结果
+ */
+export function isValidIPv4Address(ip: string): boolean {
+	const ipv4Regex =
+		/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+	return ipv4Regex.test(ip);
+}
+
+/**
+ * 验证 IPv6 地址格式
+ *
+ * @param ip - IPv6 地址
+ * @returns 验证结果
+ */
+export function isValidIPv6Address(ip: string): boolean {
+	const ipv6Regex =
+		/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,7}:$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}$|^(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}$|^(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}$|^:(?::[0-9a-fA-F]{1,4}){1,7}$|^:(?::[0-9a-fA-F]{1,4}){0,6}:[0-9a-fA-F]{1,4}$/;
+	return ipv6Regex.test(ip);
+}
+
+/**
+ * 验证 IP 地址格式
+ *
+ * @param ip - IP 地址
+ * @returns 验证结果
+ */
+export function isValidIP(ip: string): boolean {
+	return isValidIPv4Address(ip) || isValidIPv6Address(ip);
+}
+
+/**
+ * 验证 IPv4 CIDR 格式
+ *
+ * @param cidr - IPv4 地址
+ * @returns 验证结果
+ */
+export function isValidIPv4CIDR(cidr: string): boolean {
+	const cidrRegex =
+		/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([1-2]?[0-9]|3[0-2]))?$/;
+	return cidrRegex.test(cidr);
+}
+
+/**
+ * 验证 IPv6 CIDR 格式
+ *
+ * @param cidr - IPv6 地址
+ * @returns 验证结果
+ */
+export function isValidIPv6CIDR(cidr: string): boolean {
+	const cidrRegex =
+		/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(\/([1-9]|[1-2][0-9]|3[0-2]))?$|^(?:[0-9a-fA-F]{1,4}:){1,7}:(\/([1-9]|[1-2][0-9]|3[0-2]))?$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}(\/([1-9]|[1-2][0-9]|3[0-2]))?$/;
+	return cidrRegex.test(cidr);
+}
+
+/**
+ * 验证 IP CIDR 格式
+ *
+ * @param cidr - IP 地址
+ * @returns 验证结果
+ */
+export function isValidCIDR(cidr: string): boolean {
+	return isValidIPv4CIDR(cidr) || isValidIPv6CIDR(cidr);
+}
+
+/**
+ * 验证严格的 IPv4 CIDR 格式
+ *
+ * @remarks IPv4 CIDR 格式要求最后必须有斜杠和前缀长度
+ * @param cidr - IPv4 地址
+ * @returns 验证结果
+ */
+export function isValidIPv4StrictCIDR(cidr: string): boolean {
+	const cidrRegex =
+		/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([1-2]?[0-9]|3[0-2]))$/;
+	return cidrRegex.test(cidr);
+}
+
+/**
+ * 验证严格的 IPv6 CIDR 格式
+ *
+ * @remarks IPv6 CIDR 格式要求最后必须有斜杠和前缀长度
+ * @param cidr - IPv6 地址
+ * @returns 验证结果
+ */
+export function isValidIPv6StrictCIDR(cidr: string): boolean {
+	const cidrRegex =
+		/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(\/([1-9]|[1-2][0-9]|3[0-2]))?$|^(?:[0-9a-fA-F]{1,4}:){1,7}:(\/([1-9]|[1-2][0-9]|3[0-2]))?$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}(\/([1-9]|[1-2][0-9]|3[0-2]))$/;
+	return cidrRegex.test(cidr);
+}
+
+/**
+ * 验证严格的 IP CIDR 格式
+ *
+ * @remarks IP CIDR 格式要求最后必须有斜杠和前缀长度
+ * @param cidr - IP 地址
+ * @returns 验证结果
+ */
+export function isValidStrictCIDR(cidr: string): boolean {
+	return isValidIPv4StrictCIDR(cidr) || isValidIPv6StrictCIDR(cidr);
+}
+
+/**
+ * 将 IP 地址转换为 CIDR 格式
+ *
+ * @remarks 如果 IP 地址已经是 CIDR 格式，则返回原值；如果是 IPv4 地址，则添加 /32 前缀；如果是 IPv6 地址，则添加 /128 前缀
+ * @param ips - IP 地址数组
+ * @returns 严格 CIDR 格式的 IP 地址数组
+ */
+export function transformIPToCIDR(ips: Array<string>): Array<string> {
+	const returns: Array<string> = [];
+	for (const ip of ips) {
+		if (isValidCIDR(ip)) {
+			if (isValidIPv4Address(ip)) returns.push(`${ip}/32`);
+			if (isValidIPv6Address(ip)) returns.push(`${ip}/128`);
+			returns.push(ip); // 已经是严格 CIDR 格式
+		}
+		logger.warn('Invalid IP address format:', ip);
+	}
+	return returns;
+}

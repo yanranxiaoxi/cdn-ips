@@ -3,7 +3,7 @@ import dns from 'node:dns/promises';
 
 import { BasicException, BasicExceptionCode } from '../exceptions/basic.exception';
 import logger from '../utils/logger';
-import { httpGet, multiLineStrToArray } from '../utils/utils';
+import { httpGet, multiLineStrToArray, transformIPToCIDR } from '../utils/utils';
 
 export const cache = new NodeCache();
 
@@ -38,6 +38,8 @@ async function getByLines(name: string, url: string, ranges?: Array<{ start?: st
 			}
 			returns = Array.from(new Set(newReturns)); // 去重
 		}
+
+		returns = transformIPToCIDR(returns);
 		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
 		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
@@ -76,8 +78,8 @@ async function getByJson(
 			return result;
 		}
 
-		const v4Returns = getResultObjectByKeys(v4Keys);
-		const v6Returns = getResultObjectByKeys(v6Keys);
+		const v4Returns = transformIPToCIDR(getResultObjectByKeys(v4Keys));
+		const v6Returns = transformIPToCIDR(getResultObjectByKeys(v6Keys));
 		const returns = [...v4Returns, ...v6Returns];
 		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
 		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
@@ -94,7 +96,7 @@ async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn
 	const v4 = await v4Fn();
 	const v6 = await v6Fn();
 	if (v4 && v6) {
-		const returns = Array.from(new Set([...v4, ...v6]));
+		const returns = [...v4, ...v6];
 		cache.set(name, returns, 60 * 60 * 4); // 缓存 4 小时
 		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
 		return returns;
@@ -247,9 +249,10 @@ export async function flushGoogleCloudV4(): Promise<Array<string>> {
 				.filter((item) => item.startsWith('ip4:'))
 				.map((item) => item.slice(4));
 			if (ips.length > 0) {
-				cache.set('GoogleCloudV4', ips, 60 * 60 * 4); // 缓存 4 小时
-				cache.set('GoogleCloudV4Optimism', ips, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-				return ips;
+				const returns = transformIPToCIDR(ips);
+				cache.set('GoogleCloudV4', returns, 60 * 60 * 4); // 缓存 4 小时
+				cache.set('GoogleCloudV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+				return returns;
 			} else {
 				// 当长度为 0 时，表示没有找到 IPv4 地址
 				// 这不应该发生，需要记录日志、缩短缓存时间、并使用乐观缓存的数据替代标准缓存

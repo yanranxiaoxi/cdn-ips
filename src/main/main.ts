@@ -1,4 +1,5 @@
 import {
+	cache,
 	flushALTERNcloud,
 	flushALTERNcloudV4,
 	flushALTERNcloudV6,
@@ -54,7 +55,6 @@ import {
 	flushQUICcloudV4,
 	flushQUICcloudV6,
 } from './flushData';
-import { getCachedData } from './getCachedData';
 
 export enum EProviders {
 	CLOUDFLARE = 'Cloudflare',
@@ -95,115 +95,116 @@ export enum EFormat {
 	JSON_ARRAY = 'json-array',
 }
 
+async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>): Promise<Array<string>> {
+	const data: Array<string> | undefined = cache.get(tag);
+	if (data) return data;
+
+	const dataOptimism: Array<string> | undefined = cache.get(tag + 'Optimism');
+	if (dataOptimism) {
+		await flushFn();
+		return dataOptimism;
+	}
+	return await flushFn();
+}
+
+async function matchVersionFn(
+	version: EVersion,
+	provider: EProviders,
+	allFn: () => Promise<Array<string>>,
+	v4Fn: () => Promise<Array<string>>,
+	v6Fn: () => Promise<Array<string>>,
+): Promise<Array<string>> {
+	switch (version) {
+		case EVersion.V4:
+			return await getCachedData(`${provider}V4`, v4Fn);
+		case EVersion.V6:
+			return await getCachedData(`${provider}V6`, v6Fn);
+		case EVersion.ALL:
+			return await getCachedData(provider, allFn);
+	}
+}
+
 async function getProviderData(provider: EProviders, version: EVersion): Promise<Array<string>> {
 	const returns: Array<string> = [];
 	switch (provider) {
 		case EProviders.CLOUDFLARE: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('CloudflareV4', flushCloudflareV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('CloudflareV6', flushCloudflareV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Cloudflare', flushCloudflare)));
+			returns.push(...(await matchVersionFn(version, EProviders.CLOUDFLARE, flushCloudflare, flushCloudflareV4, flushCloudflareV6)));
 			break;
 		}
 		case EProviders.EDGEONE: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('EdgeOneV4', flushEdgeOneV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('EdgeOneV6', flushEdgeOneV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('EdgeOne', flushEdgeOne)));
+			returns.push(...(await matchVersionFn(version, EProviders.EDGEONE, flushEdgeOne, flushEdgeOneV4, flushEdgeOneV6)));
 			break;
 		}
 		case EProviders.FASTLY: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('FastlyV4', flushFastlyV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('FastlyV6', flushFastlyV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Fastly', flushFastly)));
+			returns.push(...(await matchVersionFn(version, EProviders.FASTLY, flushFastly, flushFastlyV4, flushFastlyV6)));
 			break;
 		}
 		case EProviders.GCORE: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('GcoreV4', flushGcoreV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('GcoreV6', flushGcoreV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Gcore', flushGcore)));
+			returns.push(...(await matchVersionFn(version, EProviders.GCORE, flushGcore, flushGcoreV4, flushGcoreV6)));
 			break;
 		}
 		case EProviders.BUNNY: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('BunnyV4', flushBunnyV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('BunnyV6', flushBunnyV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Bunny', flushBunny)));
+			returns.push(...(await matchVersionFn(version, EProviders.BUNNY, flushBunny, flushBunnyV4, flushBunnyV6)));
 			break;
 		}
 		case EProviders.CLOUDFRONT: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('CloudFrontV4', flushCloudFrontV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('CloudFrontV6', flushCloudFrontV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('CloudFront', flushCloudFront)));
+			returns.push(...(await matchVersionFn(version, EProviders.CLOUDFRONT, flushCloudFront, flushCloudFrontV4, flushCloudFrontV6)));
 			break;
 		}
 		case EProviders.KEYCDN: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('KeyCDNV4', flushKeyCDNV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('KeyCDNV6', flushKeyCDNV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('KeyCDN', flushKeyCDN)));
+			returns.push(...(await matchVersionFn(version, EProviders.KEYCDN, flushKeyCDN, flushKeyCDNV4, flushKeyCDNV6)));
 			break;
 		}
 		case EProviders.QUIC_CLOUD: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('QUICcloudV4', flushQUICcloudV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('QUICcloudV6', flushQUICcloudV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('QUICcloud', flushQUICcloud)));
+			returns.push(...(await matchVersionFn(version, EProviders.QUIC_CLOUD, flushQUICcloud, flushQUICcloudV4, flushQUICcloudV6)));
 			break;
 		}
 		case EProviders.CACHEFLY: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('CacheFlyV4', flushCacheFlyV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('CacheFlyV6', flushCacheFlyV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('CacheFly', flushCacheFly)));
+			returns.push(...(await matchVersionFn(version, EProviders.CACHEFLY, flushCacheFly, flushCacheFlyV4, flushCacheFlyV6)));
 			break;
 		}
 		case EProviders.AKAMAI: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('AkamaiV4', flushAkamaiV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('AkamaiV6', flushAkamaiV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Akamai', flushAkamai)));
+			returns.push(...(await matchVersionFn(version, EProviders.AKAMAI, flushAkamai, flushAkamaiV4, flushAkamaiV6)));
 			break;
 		}
 		case EProviders.GOOGLE_CLOUD: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudV4', flushGoogleCloudV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudV6', flushGoogleCloudV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloud', flushGoogleCloud)));
+			returns.push(...(await matchVersionFn(version, EProviders.GOOGLE_CLOUD, flushGoogleCloud, flushGoogleCloudV4, flushGoogleCloudV6)));
 			break;
 		}
 		case EProviders.GOOGLE_CLOUD_LOAD_BALANCING: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('GoogleCloudLoadBalancingV4', flushGoogleCloudLoadBalancingV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('GoogleCloudLoadBalancingV6', flushGoogleCloudLoadBalancingV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('GoogleCloudLoadBalancing', flushGoogleCloudLoadBalancing)));
+			returns.push(
+				...(await matchVersionFn(
+					version,
+					EProviders.GOOGLE_CLOUD_LOAD_BALANCING,
+					flushGoogleCloudLoadBalancing,
+					flushGoogleCloudLoadBalancingV4,
+					flushGoogleCloudLoadBalancingV6,
+				)),
+			);
 			break;
 		}
 		case EProviders.CDN77: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('CDN77V4', flushCDN77V4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('CDN77V6', flushCDN77V6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('CDN77', flushCDN77)));
+			returns.push(...(await matchVersionFn(version, EProviders.CDN77, flushCDN77, flushCDN77V4, flushCDN77V6)));
 			break;
 		}
 		case EProviders.ARVANCLOUD: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('ArvancloudV4', flushArvancloudV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('ArvancloudV6', flushArvancloudV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Arvancloud', flushArvancloud)));
+			returns.push(...(await matchVersionFn(version, EProviders.ARVANCLOUD, flushArvancloud, flushArvancloudV4, flushArvancloudV6)));
 			break;
 		}
 		case EProviders.F5_CDN: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('F5CDNV4', flushF5CDNV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('F5CDNV6', flushF5CDNV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('F5CDN', flushF5CDN)));
+			returns.push(...(await matchVersionFn(version, EProviders.F5_CDN, flushF5CDN, flushF5CDNV4, flushF5CDNV6)));
 			break;
 		}
 		case EProviders.IMPERVA: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('ImpervaV4', flushImpervaV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('ImpervaV6', flushImpervaV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Imperva', flushImperva)));
+			returns.push(...(await matchVersionFn(version, EProviders.IMPERVA, flushImperva, flushImpervaV4, flushImpervaV6)));
 			break;
 		}
 		case EProviders.MEDIANOVA: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('MedianovaV4', flushMedianovaV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('MedianovaV6', flushMedianovaV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('Medianova', flushMedianova)));
+			returns.push(...(await matchVersionFn(version, EProviders.MEDIANOVA, flushMedianova, flushMedianovaV4, flushMedianovaV6)));
 			break;
 		}
 		case EProviders.ALTERNCLOUD: {
-			version === EVersion.V4 && returns.push(...(await getCachedData('ALTERNcloudV4', flushALTERNcloudV4)));
-			version === EVersion.V6 && returns.push(...(await getCachedData('ALTERNcloudV6', flushALTERNcloudV6)));
-			version === EVersion.ALL && returns.push(...(await getCachedData('ALTERNcloud', flushALTERNcloud)));
+			returns.push(...(await matchVersionFn(version, EProviders.ALTERNCLOUD, flushALTERNcloud, flushALTERNcloudV4, flushALTERNcloudV6)));
 			break;
 		}
 	}
