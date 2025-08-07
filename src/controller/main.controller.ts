@@ -3,8 +3,6 @@ import { EFormat, EProviders, EVersion, getTransformedData } from '../main/main'
 import { IContext } from '../utils/interface';
 import { Controller } from './controller';
 
-const cache = new Map<string, any>();
-
 class Main extends Controller {
 	async get(ctx: IContext) {
 		const params = {
@@ -37,6 +35,8 @@ class Main extends Controller {
 			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, JSON.stringify(unverified));
 		}
 
+		const transformedData = await getTransformedData(params.queryProviders, params.queryVersion, params.queryFormat);
+
 		switch (params.queryFormat) {
 			case EFormat.COMMA:
 			case EFormat.LINE:
@@ -55,7 +55,7 @@ class Main extends Controller {
 			}
 		}
 		ctx.res.setHeader('Cache-Control', 'public, max-age=7200'); // 缓存 2 小时
-		ctx.res.end(await getTransformedData(params.queryProviders, params.queryVersion, params.queryFormat));
+		ctx.res.end(transformedData);
 	}
 }
 
