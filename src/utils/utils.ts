@@ -206,8 +206,9 @@ export function transformIPToCIDR(ips: Array<string>): Array<string> {
 			if (isValidIPv4Address(ip)) returns.push(`${ip}/32`);
 			if (isValidIPv6Address(ip)) returns.push(`${ip}/128`);
 			returns.push(ip); // 已经是严格 CIDR 格式
+		} else {
+			logger.warn('Invalid IP address format:', ip);
 		}
-		logger.warn('Invalid IP address format:', ip);
 	}
 	return returns;
 }
