@@ -53,7 +53,7 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 		cache: 'no-store',
 		redirect: 'follow',
 		headers: {
-			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 cdn-ips/1.0',
+			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 CDN-IPs/1.0',
 		},
 	};
 	try {
