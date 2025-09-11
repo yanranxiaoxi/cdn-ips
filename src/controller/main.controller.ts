@@ -5,10 +5,26 @@ import { Controller } from './controller';
 
 class Main extends Controller {
 	async get(ctx: IContext) {
+		// 输入长度限制
+		const providersParam = ctx.getQuery.get('providers') || Object.values(EProviders).join(',');
+		const versionParam = ctx.getQuery.get('version') || EVersion.ALL;
+		const formatParam = ctx.getQuery.get('format') || EFormat.JSON;
+
+		// 验证输入长度
+		if (providersParam.length > 1000) {
+			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, 'Providers parameter too long');
+		}
+		if (versionParam.length > 10) {
+			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, 'Version parameter too long');
+		}
+		if (formatParam.length > 50) {
+			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, 'Format parameter too long');
+		}
+
 		const params = {
-			queryProviders: (ctx.getQuery.get('providers') || Object.values(EProviders).join(',')).split(','),
-			queryVersion: ctx.getQuery.get('version') || EVersion.ALL,
-			queryFormat: ctx.getQuery.get('format') || EFormat.JSON,
+			queryProviders: providersParam.split(','),
+			queryVersion: versionParam,
+			queryFormat: formatParam,
 		};
 
 		const unverified = this.verifyParam(

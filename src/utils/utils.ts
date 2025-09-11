@@ -48,16 +48,21 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 		url += argKVs.join('&');
 	}
 
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+
 	const options: RequestInit = {
 		method: 'GET',
 		cache: 'no-store',
 		redirect: 'follow',
+		signal: controller.signal,
 		headers: {
 			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 CDN-IPs/1.0',
 		},
 	};
 	try {
 		const response = await fetch(url, options);
+		clearTimeout(timeoutId);
 		if (response.ok) {
 			return await response.text();
 		} else {
@@ -65,7 +70,12 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 			return undefined;
 		}
 	} catch (error) {
-		logger.error('HTTP GET failed:', url, '\n', error);
+		clearTimeout(timeoutId);
+		if (error instanceof Error && error.name === 'AbortError') {
+			logger.error('HTTP GET timeout:', url);
+		} else {
+			logger.error('HTTP GET failed:', url, '\n', error);
+		}
 		return undefined;
 	}
 }

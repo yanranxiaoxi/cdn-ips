@@ -9,7 +9,9 @@ const api = (): IMiddleware => {
 		const start = hrtime.bigint();
 		const rsp = ctx.res;
 		rsp.setHeader('content-type', 'application/json');
-		// rsp.setHeader('Access-Control-Allow-Origin', '*');
+		rsp.setHeader('Access-Control-Allow-Origin', '*');
+		rsp.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+		rsp.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
 		try {
 			await next();

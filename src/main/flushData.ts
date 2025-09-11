@@ -5,7 +5,21 @@ import { BasicException, BasicExceptionCode } from '../exceptions/basic.exceptio
 import logger from '../utils/logger';
 import { httpGet, multiLineStrToArray, transformIPToCIDR } from '../utils/utils';
 
-export const cache = new NodeCache();
+// 缓存配置常量
+const CACHE_CONFIG = {
+	MAX_KEYS: 1000,
+	STD_TTL: 60 * 60 * 24, // 24小时
+	SHORT_TTL: 60 * 60 * 4, // 4小时
+	CHECK_PERIOD: 60 * 60, // 1小时
+	OPTIMISM_TTL: 60 * 60 * 24 * 7, // 7天
+} as const;
+
+export const cache = new NodeCache({
+	maxKeys: CACHE_CONFIG.MAX_KEYS,
+	stdTTL: CACHE_CONFIG.STD_TTL,
+	checkperiod: CACHE_CONFIG.CHECK_PERIOD,
+	useClones: false, // 不克隆对象，提高性能
+});
 
 function throwError(name: string, message?: string): any {
 	message =
@@ -17,8 +31,8 @@ function throwError(name: string, message?: string): any {
 }
 
 function returnDirectly(name: string, data: Array<string> = []): Array<string> {
-	cache.set(name, data, 60 * 60 * 24); // 缓存 24 小时
-	cache.set(name + 'Optimism', data, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+	cache.set(name, data, CACHE_CONFIG.STD_TTL);
+	cache.set(name + 'Optimism', data, CACHE_CONFIG.OPTIMISM_TTL);
 	return data;
 }
 
@@ -40,8 +54,8 @@ async function getByLines(name: string, url: string, ranges?: Array<{ start?: st
 		}
 
 		returns = transformIPToCIDR(returns);
-		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set(name, returns, CACHE_CONFIG.STD_TTL);
+		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -81,12 +95,12 @@ async function getByJson(
 		const v4Returns = transformIPToCIDR(getResultObjectByKeys(v4Keys));
 		const v6Returns = transformIPToCIDR(getResultObjectByKeys(v6Keys));
 		const returns = [...v4Returns, ...v6Returns];
-		cache.set(name, returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set(name + 'V4', v4Returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set(name + 'V4Optimism', v4Returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
-		cache.set(name + 'V6', v6Returns, 60 * 60 * 24); // 缓存 24 小时
-		cache.set(name + 'V6Optimism', v6Returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set(name, returns, CACHE_CONFIG.STD_TTL);
+		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(name + 'V4', v4Returns, CACHE_CONFIG.STD_TTL);
+		cache.set(name + 'V4Optimism', v4Returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(name + 'V6', v6Returns, CACHE_CONFIG.STD_TTL);
+		cache.set(name + 'V6Optimism', v6Returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -97,8 +111,8 @@ async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn
 	const v6 = await v6Fn();
 	if (v4 && v6) {
 		const returns = [...v4, ...v6];
-		cache.set(name, returns, 60 * 60 * 4); // 缓存 4 小时
-		cache.set(name + 'Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+		cache.set(name, returns, CACHE_CONFIG.SHORT_TTL);
+		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -250,8 +264,8 @@ export async function flushGoogleCloudV4(): Promise<Array<string>> {
 				.map((item) => item.slice(4));
 			if (ips.length > 0) {
 				const returns = transformIPToCIDR(ips);
-				cache.set('GoogleCloudV4', returns, 60 * 60 * 4); // 缓存 4 小时
-				cache.set('GoogleCloudV4Optimism', returns, 60 * 60 * 24 * 7); // 乐观缓存 7 天
+				cache.set('GoogleCloudV4', returns, CACHE_CONFIG.SHORT_TTL);
+				cache.set('GoogleCloudV4Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
 				return returns;
 			} else {
 				// 当长度为 0 时，表示没有找到 IPv4 地址

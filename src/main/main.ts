@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import {
 	cache,
 	flushALTERNcloud,
@@ -95,16 +96,38 @@ export enum EFormat {
 	JSON_ARRAY = 'json-array',
 }
 
+// 并发控制Map，避免重复请求
+const pendingRequests = new Map<string, Promise<Array<string>>>();
+
 async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>): Promise<Array<string>> {
 	const data: Array<string> | undefined = cache.get(tag);
 	if (data) return data;
 
 	const dataOptimism: Array<string> | undefined = cache.get(tag + 'Optimism');
 	if (dataOptimism) {
-		await flushFn();
+		// 异步更新缓存，不阻塞当前请求
+		flushFn().catch((error) => {
+			logger.error(`Failed to refresh cache for ${tag}:`, error);
+		});
 		return dataOptimism;
 	}
-	return await flushFn();
+
+	// 检查是否有正在进行的相同请求
+	if (pendingRequests.has(tag)) {
+		return await pendingRequests.get(tag)!;
+	}
+
+	// 创建新的请求Promise
+	const requestPromise = flushFn();
+	pendingRequests.set(tag, requestPromise);
+
+	try {
+		const result = await requestPromise;
+		return result;
+	} finally {
+		// 清理pending请求
+		pendingRequests.delete(tag);
+	}
 }
 
 async function matchVersionFn(
@@ -124,91 +147,40 @@ async function matchVersionFn(
 	}
 }
 
+// Provider函数映射，减少重复代码
+const PROVIDER_FUNCTIONS = {
+	[EProviders.CLOUDFLARE]: { all: flushCloudflare, v4: flushCloudflareV4, v6: flushCloudflareV6 },
+	[EProviders.EDGEONE]: { all: flushEdgeOne, v4: flushEdgeOneV4, v6: flushEdgeOneV6 },
+	[EProviders.FASTLY]: { all: flushFastly, v4: flushFastlyV4, v6: flushFastlyV6 },
+	[EProviders.GCORE]: { all: flushGcore, v4: flushGcoreV4, v6: flushGcoreV6 },
+	[EProviders.BUNNY]: { all: flushBunny, v4: flushBunnyV4, v6: flushBunnyV6 },
+	[EProviders.CLOUDFRONT]: { all: flushCloudFront, v4: flushCloudFrontV4, v6: flushCloudFrontV6 },
+	[EProviders.KEYCDN]: { all: flushKeyCDN, v4: flushKeyCDNV4, v6: flushKeyCDNV6 },
+	[EProviders.QUIC_CLOUD]: { all: flushQUICcloud, v4: flushQUICcloudV4, v6: flushQUICcloudV6 },
+	[EProviders.CACHEFLY]: { all: flushCacheFly, v4: flushCacheFlyV4, v6: flushCacheFlyV6 },
+	[EProviders.AKAMAI]: { all: flushAkamai, v4: flushAkamaiV4, v6: flushAkamaiV6 },
+	[EProviders.GOOGLE_CLOUD]: { all: flushGoogleCloud, v4: flushGoogleCloudV4, v6: flushGoogleCloudV6 },
+	[EProviders.GOOGLE_CLOUD_LOAD_BALANCING]: {
+		all: flushGoogleCloudLoadBalancing,
+		v4: flushGoogleCloudLoadBalancingV4,
+		v6: flushGoogleCloudLoadBalancingV6,
+	},
+	[EProviders.CDN77]: { all: flushCDN77, v4: flushCDN77V4, v6: flushCDN77V6 },
+	[EProviders.ARVANCLOUD]: { all: flushArvancloud, v4: flushArvancloudV4, v6: flushArvancloudV6 },
+	[EProviders.F5_CDN]: { all: flushF5CDN, v4: flushF5CDNV4, v6: flushF5CDNV6 },
+	[EProviders.IMPERVA]: { all: flushImperva, v4: flushImpervaV4, v6: flushImpervaV6 },
+	[EProviders.MEDIANOVA]: { all: flushMedianova, v4: flushMedianovaV4, v6: flushMedianovaV6 },
+	[EProviders.ALTERNCLOUD]: { all: flushALTERNcloud, v4: flushALTERNcloudV4, v6: flushALTERNcloudV6 },
+} as const;
+
 async function getProviderData(provider: EProviders, version: EVersion): Promise<Array<string>> {
-	const returns: Array<string> = [];
-	switch (provider) {
-		case EProviders.CLOUDFLARE: {
-			returns.push(...(await matchVersionFn(version, EProviders.CLOUDFLARE, flushCloudflare, flushCloudflareV4, flushCloudflareV6)));
-			break;
-		}
-		case EProviders.EDGEONE: {
-			returns.push(...(await matchVersionFn(version, EProviders.EDGEONE, flushEdgeOne, flushEdgeOneV4, flushEdgeOneV6)));
-			break;
-		}
-		case EProviders.FASTLY: {
-			returns.push(...(await matchVersionFn(version, EProviders.FASTLY, flushFastly, flushFastlyV4, flushFastlyV6)));
-			break;
-		}
-		case EProviders.GCORE: {
-			returns.push(...(await matchVersionFn(version, EProviders.GCORE, flushGcore, flushGcoreV4, flushGcoreV6)));
-			break;
-		}
-		case EProviders.BUNNY: {
-			returns.push(...(await matchVersionFn(version, EProviders.BUNNY, flushBunny, flushBunnyV4, flushBunnyV6)));
-			break;
-		}
-		case EProviders.CLOUDFRONT: {
-			returns.push(...(await matchVersionFn(version, EProviders.CLOUDFRONT, flushCloudFront, flushCloudFrontV4, flushCloudFrontV6)));
-			break;
-		}
-		case EProviders.KEYCDN: {
-			returns.push(...(await matchVersionFn(version, EProviders.KEYCDN, flushKeyCDN, flushKeyCDNV4, flushKeyCDNV6)));
-			break;
-		}
-		case EProviders.QUIC_CLOUD: {
-			returns.push(...(await matchVersionFn(version, EProviders.QUIC_CLOUD, flushQUICcloud, flushQUICcloudV4, flushQUICcloudV6)));
-			break;
-		}
-		case EProviders.CACHEFLY: {
-			returns.push(...(await matchVersionFn(version, EProviders.CACHEFLY, flushCacheFly, flushCacheFlyV4, flushCacheFlyV6)));
-			break;
-		}
-		case EProviders.AKAMAI: {
-			returns.push(...(await matchVersionFn(version, EProviders.AKAMAI, flushAkamai, flushAkamaiV4, flushAkamaiV6)));
-			break;
-		}
-		case EProviders.GOOGLE_CLOUD: {
-			returns.push(...(await matchVersionFn(version, EProviders.GOOGLE_CLOUD, flushGoogleCloud, flushGoogleCloudV4, flushGoogleCloudV6)));
-			break;
-		}
-		case EProviders.GOOGLE_CLOUD_LOAD_BALANCING: {
-			returns.push(
-				...(await matchVersionFn(
-					version,
-					EProviders.GOOGLE_CLOUD_LOAD_BALANCING,
-					flushGoogleCloudLoadBalancing,
-					flushGoogleCloudLoadBalancingV4,
-					flushGoogleCloudLoadBalancingV6,
-				)),
-			);
-			break;
-		}
-		case EProviders.CDN77: {
-			returns.push(...(await matchVersionFn(version, EProviders.CDN77, flushCDN77, flushCDN77V4, flushCDN77V6)));
-			break;
-		}
-		case EProviders.ARVANCLOUD: {
-			returns.push(...(await matchVersionFn(version, EProviders.ARVANCLOUD, flushArvancloud, flushArvancloudV4, flushArvancloudV6)));
-			break;
-		}
-		case EProviders.F5_CDN: {
-			returns.push(...(await matchVersionFn(version, EProviders.F5_CDN, flushF5CDN, flushF5CDNV4, flushF5CDNV6)));
-			break;
-		}
-		case EProviders.IMPERVA: {
-			returns.push(...(await matchVersionFn(version, EProviders.IMPERVA, flushImperva, flushImpervaV4, flushImpervaV6)));
-			break;
-		}
-		case EProviders.MEDIANOVA: {
-			returns.push(...(await matchVersionFn(version, EProviders.MEDIANOVA, flushMedianova, flushMedianovaV4, flushMedianovaV6)));
-			break;
-		}
-		case EProviders.ALTERNCLOUD: {
-			returns.push(...(await matchVersionFn(version, EProviders.ALTERNCLOUD, flushALTERNcloud, flushALTERNcloudV4, flushALTERNcloudV6)));
-			break;
-		}
+	const providerFuncs = PROVIDER_FUNCTIONS[provider];
+	if (!providerFuncs) {
+		logger.warn(`Unknown provider: ${provider}`);
+		return [];
 	}
-	return returns;
+
+	return await matchVersionFn(version, provider, providerFuncs.all, providerFuncs.v4, providerFuncs.v6);
 }
 
 type TCompositeObject = {
