@@ -60,7 +60,7 @@ import type { IContext } from '../utils/interface';
 import logger from '../utils/logger';
 import { Controller } from './controller';
 
-interface CacheUpdateResult {
+export interface CacheUpdateResult {
 	provider: string;
 	version?: string;
 	success: boolean;
@@ -69,7 +69,7 @@ interface CacheUpdateResult {
 	ipCount: number;
 }
 
-interface CacheUpdateResponse {
+export interface CacheUpdateResponse {
 	success: boolean;
 	message: string;
 	results: CacheUpdateResult[];
@@ -85,6 +85,20 @@ class Cache extends Controller {
 	 */
 	public async preupdate(ctx: IContext) {
 		logger.info('Cache preupdate requested for all providers');
+
+		const response = await this.preupdateCache();
+
+		ctx.res.setHeader('Content-Type', 'application/json; charset=utf-8');
+		ctx.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+		ctx.res.end(JSON.stringify(response, null, 2));
+	}
+
+	/**
+	 * 执行缓存预更新（核心逻辑，不依赖 HTTP 上下文）
+	 * 可以被定时任务或其他服务调用
+	 */
+	public async preupdateCache(): Promise<CacheUpdateResponse> {
+		logger.info('Executing cache preupdate for all providers');
 
 		// 执行缓存更新
 		const results = await this.updateCacheForProviders(Object.values(EProviders), EVersion.ALL, false);
@@ -105,9 +119,8 @@ class Cache extends Controller {
 			updatedAt: new Date().toISOString(),
 		};
 
-		ctx.res.setHeader('Content-Type', 'application/json; charset=utf-8');
-		ctx.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-		ctx.res.end(JSON.stringify(response, null, 2));
+		logger.info(`Cache preupdate completed: ${response.message}`);
+		return response;
 	}
 
 	/**

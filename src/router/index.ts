@@ -1,6 +1,7 @@
 import cache from '../controller/cache.controller';
 import health from '../controller/health.controller';
 import main from '../controller/main.controller';
+import scheduler from '../controller/scheduler.controller';
 import api from '../middleware/api.middleware';
 import parameterMid from '../middleware/parameter.middleware';
 import type { Venation } from '../utils/venation';
@@ -12,5 +13,8 @@ export default async (ven: Venation) => {
 		sub.get('/cache/status', cache.status);
 		sub.get('/health/ready', health.ready);
 		sub.get('/health/live', health.live);
+
+		// 调度器状态接口
+		sub.get('/scheduler/status', scheduler.status);
 	});
 };
