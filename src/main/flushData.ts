@@ -8,10 +8,10 @@ import { httpGet, multiLineStrToArray, transformIPToCIDR } from '../utils/utils'
 // 缓存配置常量
 const CACHE_CONFIG = {
 	MAX_KEYS: 1000,
-	STD_TTL: 60 * 60 * 24, // 24小时
-	SHORT_TTL: 60 * 60 * 4, // 4小时
-	CHECK_PERIOD: 60 * 60, // 1小时
-	OPTIMISM_TTL: 60 * 60 * 24 * 7, // 7天
+	STD_TTL: 60 * 60 * 24, // 24 小时
+	SHORT_TTL: 60 * 60 * 4, // 4 小时
+	CHECK_PERIOD: 60 * 60, // 1 小时
+	OPTIMISM_TTL: 60 * 60 * 24 * 7, // 7 天
 } as const;
 
 export const cache = new NodeCache({
@@ -34,6 +34,20 @@ function returnDirectly(name: string, data: Array<string> = []): Array<string> {
 	cache.set(name, data, CACHE_CONFIG.STD_TTL);
 	cache.set(name + 'Optimism', data, CACHE_CONFIG.OPTIMISM_TTL);
 	return data;
+}
+
+function getResultObjectByKeys(getResultObject: { [key: string]: any }, keys: Array<string>, valueTransFn?: (data: any) => string): Array<string> {
+	const result: Array<string> = [];
+	for (const key of keys) {
+		if (getResultObject[key]) {
+			if (valueTransFn) {
+				result.push(...getResultObject[key].map(valueTransFn));
+			} else {
+				result.push(...getResultObject[key]);
+			}
+		}
+	}
+	return result;
 }
 
 async function getByLines(name: string, url: string, ranges?: Array<{ start?: string; end?: string }>): Promise<Array<string>> {
@@ -78,22 +92,8 @@ async function getByJson(
 			getResultObject = parentTransFn(getResultObject);
 		}
 
-		function getResultObjectByKeys(keys: Array<string>): Array<string> {
-			const result: Array<string> = [];
-			for (const key of keys) {
-				if (getResultObject[key]) {
-					if (valueTransFn) {
-						result.push(...getResultObject[key].map(valueTransFn));
-					} else {
-						result.push(...getResultObject[key]);
-					}
-				}
-			}
-			return result;
-		}
-
-		const v4Returns = transformIPToCIDR(getResultObjectByKeys(v4Keys));
-		const v6Returns = transformIPToCIDR(getResultObjectByKeys(v6Keys));
+		const v4Returns = transformIPToCIDR(getResultObjectByKeys(getResultObject, v4Keys, valueTransFn));
+		const v6Returns = transformIPToCIDR(getResultObjectByKeys(getResultObject, v6Keys, valueTransFn));
 		const returns = [...v4Returns, ...v6Returns];
 		cache.set(name, returns, CACHE_CONFIG.STD_TTL);
 		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);

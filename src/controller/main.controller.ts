@@ -1,10 +1,10 @@
 import { BasicException, ParamsExceptionCode } from '../exceptions/basic.exception';
 import { EFormat, EProviders, EVersion, getTransformedData } from '../main/main';
-import { IContext } from '../utils/interface';
+import type { IContext } from '../utils/interface';
 import { Controller } from './controller';
 
 class Main extends Controller {
-	async get(ctx: IContext) {
+	public async get(ctx: IContext) {
 		// 输入长度限制
 		const providersParam = ctx.getQuery.get('providers') || Object.values(EProviders).join(',');
 		const versionParam = ctx.getQuery.get('version') || EVersion.ALL;

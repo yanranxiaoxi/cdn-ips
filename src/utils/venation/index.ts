@@ -1,13 +1,14 @@
-import { Logger } from 'log4js';
+import type { Logger } from 'log4js';
+
 import { Router } from '../router';
-import { VenNodeDriver } from './driver';
+import type { VenNodeDriver } from './driver';
 
 export class Venation extends Router {
-	constructor(readonly logger: Logger) {
+	public constructor(public readonly logger: Logger) {
 		super();
 	}
 
-	addDriver(driver: VenNodeDriver) {
+	public addDriver(driver: VenNodeDriver) {
 		driver.onRequest(async (req, res) => {
 			const ctx: any = {
 				req: req,
@@ -27,7 +28,7 @@ export class Venation extends Router {
 					res.statusCode = 404;
 					res.end('404 Not Found !!!');
 				} else {
-					await this.run(<any>ctx, path === '/' ? '' : path, routeIndex);
+					await this.run(ctx as any, path === '/' ? '' : path, routeIndex);
 					res.end();
 				}
 			} catch (ex) {

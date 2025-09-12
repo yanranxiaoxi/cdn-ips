@@ -1,11 +1,13 @@
-import http, { ServerResponse } from 'http';
+import type { ServerResponse } from 'http';
+import http from 'http';
+import type { Logger } from 'log4js';
+
 import { VenDriver } from '../interface';
-import { Logger } from 'log4js';
 import { IRequest, IResponse } from './transport';
 
 export class VenNodeDriver extends VenDriver {
-	readonly server;
-	constructor(private readonly logger: Logger) {
+	public readonly server;
+	public constructor(private readonly logger: Logger) {
 		super();
 		this.server = http.createServer({
 			IncomingMessage: IRequest,
@@ -13,7 +15,7 @@ export class VenNodeDriver extends VenDriver {
 		});
 	}
 
-	listen(host: string, port: number) {
+	public listen(host: string, port: number) {
 		this.server.on('listening', () => {
 			this.logger.info(`server is listening on http://${host}:${port}`);
 		});
@@ -21,7 +23,7 @@ export class VenNodeDriver extends VenDriver {
 		this.server.listen(port, host);
 	}
 
-	onRequest(cb: (req: IRequest, res: IResponse) => void) {
+	public onRequest(cb: (req: IRequest, res: IResponse) => void) {
 		this.server.on('request', (req, res) => {
 			cb(req, res as IResponse);
 		});

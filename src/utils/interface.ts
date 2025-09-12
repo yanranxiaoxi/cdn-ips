@@ -1,13 +1,14 @@
-import { IncomingMessage, ServerResponse } from 'http';
-import { Logger } from 'log4js';
-import { IRequest, IResponse } from './venation/transport';
+import type { IncomingMessage, ServerResponse } from 'http';
+import type { Logger } from 'log4js';
+
+import type { IRequest, IResponse } from './venation/transport';
 
 export abstract class VenDriver {
 	/**
 	 * 向驱动注册请求狗子，当一个请求送达后，执行一次回调
-	 * @param cb 回调函数
+	 * @param cb - 回调函数
 	 */
-	abstract onRequest(cb: (req: IncomingMessage, res: ServerResponse) => void): void;
+	public abstract onRequest(cb: (req: IncomingMessage, res: ServerResponse) => void): void;
 }
 
 export interface IContext extends ITransports {
@@ -27,14 +28,8 @@ export interface ITransports {
 	res: IResponse;
 }
 
-export interface IController {
-	(ctx: IContext): Promise<void>;
-}
+export type IController = (ctx: IContext) => Promise<void>;
 
-export interface INext {
-	(): Promise<any>;
-}
+export type INext = () => Promise<any>;
 
-export interface IMiddleware {
-	(ctx: IContext, next: () => Promise<any>): Promise<void>;
-}
+export type IMiddleware = (ctx: IContext, next: () => Promise<any>) => Promise<void>;

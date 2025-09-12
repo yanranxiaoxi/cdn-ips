@@ -1,7 +1,7 @@
 import { hrtime } from 'process';
 
 import { BasicException } from '../exceptions/basic.exception';
-import { IMiddleware } from '../utils/interface';
+import type { IMiddleware } from '../utils/interface';
 
 const api = (): IMiddleware => {
 	return async (ctx, next) => {
@@ -34,7 +34,7 @@ const api = (): IMiddleware => {
 				ex.code = 500;
 				ex.msg = '500 Internal Server Error !!!';
 			}
-			if (ex?.error == 1062) {
+			if (ex?.error === 1062) {
 				ex.code = 1000001;
 			}
 			const body = JSON.stringify({

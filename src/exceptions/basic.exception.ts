@@ -45,7 +45,7 @@ export const BasicExceptionCode = {
 	Unauthorized: {
 		code: 401,
 		msg: 'Unauthorized: Authentication is required and has failed or not yet been provided.',
-	}, //错误的请求语法、无效的请求消息帧或欺骗性的请求路由
+	}, // 错误的请求语法、无效的请求消息帧或欺骗性的请求路由
 	Forbidden: {
 		code: 403,
 		msg: ' Forbidden: The client does not have permission to access the requested resource.',
@@ -65,12 +65,12 @@ export const BasicExceptionCode = {
 	ContentTooLarge: {
 		code: 413,
 		msg: 'Request entity is larger than limits defined by server. ',
-	}, //请求实体大于服务器定义的限制
+	}, // 请求实体大于服务器定义的限制
 	UnsupportedMediaType: {
 		code: 415,
 		msg: 'The media format of the requested data is not supported by the server.',
 	}, // 服务器不支持请求数据的媒体格式，因此服务器拒绝请求。
-	Locked: { code: 423, msg: 'The resource that is being accessed is locked.' }, //正在访问的资源被锁定。
+	Locked: { code: 423, msg: 'The resource that is being accessed is locked.' }, // 正在访问的资源被锁定。
 	FailedDependency: {
 		code: 424,
 		msg: 'The request failed due to failure of a previous request.',
@@ -98,11 +98,11 @@ export const BasicExceptionCode = {
 	GatewayTimeout: {
 		code: 504,
 		msg: 'This error response is given when the server is acting as a gateway and cannot get a response in time.',
-	}, //当服务器充当网关且无法及时获得响应时，会给出此错误响应。
+	}, // 当服务器充当网关且无法及时获得响应时，会给出此错误响应。
 	HTTPVersionNotSupported: {
 		code: 505,
 		msg: 'The HTTP version used in the request is not supported by the server.',
-	}, //服务器不支持请求中使用的 HTTP 版本。
+	}, // 服务器不支持请求中使用的 HTTP 版本。
 };
 
 /**
@@ -191,7 +191,7 @@ export class BasicException extends Error {
 	protected code: number;
 	protected msg: string;
 	protected httpCode: number | null = 200;
-	constructor(errorData: ExceptionData, detail: string = '', httpCode: number | null = null) {
+	public constructor(errorData: ExceptionData, detail = '', httpCode: number | null = null) {
 		super();
 		this.code = errorData.code;
 		this.msg = (detail || errorData.msg) ?? '';

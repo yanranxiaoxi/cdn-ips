@@ -1,6 +1,6 @@
-import { BuildOptions } from 'esbuild';
+import type { BuildOptions } from 'esbuild';
 
-export default {
+const config: BuildOptions = {
 	entryPoints: {
 		index: './src/entry/index.ts',
 	},
@@ -16,4 +16,6 @@ export default {
 	ignoreAnnotations: true,
 	define: {},
 	external: ['skywalking-backend-js'],
-} as BuildOptions;
+};
+
+export default config;

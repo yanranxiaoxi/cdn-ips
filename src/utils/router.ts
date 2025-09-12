@@ -1,4 +1,4 @@
-import { IContext, IMiddleware } from './interface';
+import type { IContext, IMiddleware } from './interface';
 
 export type TNode = string | RegExp;
 
@@ -6,61 +6,61 @@ export class Router {
 	private node: TNode;
 	private childRouterList: Array<Router> = [];
 	private mids: Array<IMiddleware>;
-	private method: string = ''; // 路由末端节点请求类型
+	private method = ''; // 路由末端节点请求类型
 
-	constructor(node: TNode = '', ...mids: Array<IMiddleware>) {
+	public constructor(node: TNode = '', ...mids: Array<IMiddleware>) {
 		this.node = node;
 		this.mids = mids;
 	}
 
 	/**
 	 * 创建子路由
-	 * @param node 路由节点
-	 * @param mids 路由中间
+	 * @param node - 路由节点
+	 * @param mids - 路由中间
 	 * @returns 子路由
 	 */
-	router(node: TNode, ...mids: Array<IMiddleware>) {
+	public router(node: TNode, ...mids: Array<IMiddleware>) {
 		const childRouter = new Router(node, ...mids);
 		this.childRouterList.push(childRouter);
 		return Promise.resolve(childRouter);
 	}
 
-	get(node: TNode, ...mids: Array<IMiddleware>) {
+	public get(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'get';
 		});
 		return this;
 	}
 
-	post(node: TNode, ...mids: Array<IMiddleware>) {
+	public post(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'post';
 		});
 		return this;
 	}
 
-	put(node: TNode, ...mids: Array<IMiddleware>) {
+	public put(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'put';
 		});
 		return this;
 	}
 
-	patch(node: TNode, ...mids: Array<IMiddleware>) {
+	public patch(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'patch';
 		});
 		return this;
 	}
 
-	delete(node: TNode, ...mids: Array<IMiddleware>) {
+	public delete(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'delete';
 		});
 		return this;
 	}
 
-	all(node: TNode, ...mids: Array<IMiddleware>) {
+	public all(node: TNode, ...mids: Array<IMiddleware>) {
 		this.router(node, ...mids).then((child) => {
 			child.method = 'all';
 		});
@@ -69,11 +69,11 @@ export class Router {
 
 	/**
 	 * 通过path 匹配是否以 node 开头
-	 * @param node 路由节点
-	 * @param path 路由路径
+	 * @param node - 路由节点
+	 * @param path - 路由路径
 	 * @returns 匹配结果，如果匹配返回下一级 path, 未匹配返回 false
 	 */
-	match(ctx: IContext, node: TNode | null, path: string): string | false {
+	public match(ctx: IContext, node: TNode | null, path: string): string | false {
 		if (typeof node === 'string') {
 			if (node === '') {
 				return path;
@@ -89,7 +89,7 @@ export class Router {
 			}
 			if (path.startsWith(node)) {
 				const nextUrl = path.slice(node.length);
-				if (nextUrl.startsWith('/') || nextUrl == '') {
+				if (nextUrl.startsWith('/') || nextUrl === '') {
 					return nextUrl;
 				}
 				return false;
@@ -105,22 +105,22 @@ export class Router {
 
 	/**
 	 * 路由拼接
-	 * @param router 根路由
-	 * @param node 拼接路由节点
+	 * @param router - 根路由
+	 * @param node - 拼接路由节点
 	 */
-	merge(router: Router, node: TNode = '') {
+	public merge(router: Router, node: TNode = '') {
 		router.node = node;
 		this.childRouterList.push(router);
 	}
 
 	/**
 	 * 校验路由是否存在、设置路由参数、获取路由路径列表
-	 * @param ctx
-	 * @param url 路由地址
-	 * @param routeIndex 存放路由路径列表
+	 * @param ctx - 路由上下文
+	 * @param url - 路由地址
+	 * @param routeIndex - 存放路由路径列表
 	 * @returns 是否存在路由
 	 */
-	checkRoute(ctx: IContext, url: string, routeIndex: Array<number>) {
+	public checkRoute(ctx: IContext, url: string, routeIndex: Array<number>) {
 		const nextUrl = this.match(ctx, this.node, url);
 		if (nextUrl === false) {
 			return false;
@@ -149,12 +149,12 @@ export class Router {
 
 	/**
 	 * 提取路由中的参数
-	 * @param ctx
-	 * @param node 路由节点
-	 * @param path 路由路径
+	 * @param ctx - 路由上下文
+	 * @param node - 路由节点
+	 * @param path - 路由路径
 	 * @returns
 	 */
-	parseRouteParams(ctx: IContext, node: TNode, path: string) {
+	public parseRouteParams(ctx: IContext, node: TNode, path: string) {
 		if (typeof node === 'string') {
 			if (node.includes('/:')) {
 				const regex = new RegExp('^' + node.replace(/\/:[^\/]+/g, '/([^/]+)'));
@@ -173,7 +173,7 @@ export class Router {
 				return nextUrl ?? '';
 			} else {
 				const nextUrl = path.slice(node.length);
-				if (nextUrl.startsWith('/') || nextUrl == '') {
+				if (nextUrl.startsWith('/') || nextUrl === '') {
 					return nextUrl;
 				}
 				return '';
@@ -189,12 +189,12 @@ export class Router {
 
 	/**
 	 * 路由执行器
-	 * @param ctx 路由上下文
-	 * @param url 查询路径
-	 * @param mids 路由中间件
+	 * @param ctx - 路由上下文
+	 * @param url - 查询路径
+	 * @param mids - 路由中间件
 	 * @returns
 	 */
-	async run(ctx: IContext, path: string, routeIndex: Array<number>) {
+	public async run(ctx: IContext, path: string, routeIndex: Array<number>) {
 		const subindex = routeIndex.pop();
 		const nextPath = this.parseRouteParams(ctx, this.node, path);
 		const execute = async (router: Router, index: number) => {

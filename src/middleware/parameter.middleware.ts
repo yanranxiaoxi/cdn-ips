@@ -1,5 +1,6 @@
 import formidable from 'formidable';
-import { IMiddleware } from '../utils/interface';
+
+import type { IMiddleware } from '../utils/interface';
 
 const parameterMid: IMiddleware = async (ctx, next) => {
 	const parsedUrl = new URL(ctx.req.url ?? '', `http://${ctx.req.headers.host}`);
@@ -16,11 +17,13 @@ const parameterMid: IMiddleware = async (ctx, next) => {
 					if (ctx.req.headers['content-type']?.includes('form-data')) {
 						const exchangeFields = {} as any;
 						for (const key in fields) {
-							exchangeFields[key] = fields[key];
-							if (Array.isArray(fields[key]) && fields[key]?.length === 1) {
-								exchangeFields[key] = (<any>fields[key])[0];
-							} else {
+							if (Object.prototype.hasOwnProperty.call(fields, key)) {
 								exchangeFields[key] = fields[key];
+								if (Array.isArray(fields[key]) && fields[key]?.length === 1) {
+									exchangeFields[key] = (fields[key] as any)[0];
+								} else {
+									exchangeFields[key] = fields[key];
+								}
 							}
 						}
 						ctx.requestParams = exchangeFields;

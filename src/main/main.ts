@@ -96,7 +96,7 @@ export enum EFormat {
 	JSON_ARRAY = 'json-array',
 }
 
-// 并发控制Map，避免重复请求
+// 并发控制 Map，避免重复请求
 const pendingRequests = new Map<string, Promise<Array<string>>>();
 
 async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>): Promise<Array<string>> {
@@ -117,7 +117,7 @@ async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>)
 		return await pendingRequests.get(tag)!;
 	}
 
-	// 创建新的请求Promise
+	// 创建新的请求 Promise
 	const requestPromise = flushFn();
 	pendingRequests.set(tag, requestPromise);
 
@@ -125,7 +125,7 @@ async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>)
 		const result = await requestPromise;
 		return result;
 	} finally {
-		// 清理pending请求
+		// 清理 pending 请求
 		pendingRequests.delete(tag);
 	}
 }
@@ -147,7 +147,7 @@ async function matchVersionFn(
 	}
 }
 
-// Provider函数映射，减少重复代码
+// Provider 函数映射，减少重复代码
 const PROVIDER_FUNCTIONS = {
 	[EProviders.CLOUDFLARE]: { all: flushCloudflare, v4: flushCloudflareV4, v6: flushCloudflareV6 },
 	[EProviders.EDGEONE]: { all: flushEdgeOne, v4: flushEdgeOneV4, v6: flushEdgeOneV6 },

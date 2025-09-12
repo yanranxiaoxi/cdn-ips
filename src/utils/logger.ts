@@ -1,6 +1,8 @@
-import log4js, { Configuration } from 'log4js';
-import { CONFIG } from '../config/config';
+import type { Configuration } from 'log4js';
+import log4js from 'log4js';
 import { join } from 'path';
+
+import { CONFIG } from '../config/config';
 
 // 日志同时输出到控制台和文件
 const config: Configuration = {

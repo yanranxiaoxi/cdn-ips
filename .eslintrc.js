@@ -1,4 +1,4 @@
-export default {
+module.exports = {
 	plugins: ['eslint-plugin-tsdoc'],
 	extends: ['alloy', 'alloy/typescript'],
 	ignorePatterns: ['/logs/', '/dist/', '/node_modules/', '/.eslintcache'],
