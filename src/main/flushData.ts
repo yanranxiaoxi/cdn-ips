@@ -134,7 +134,7 @@ export async function flushEdgeOneV6(): Promise<Array<string>> {
 }
 
 export async function flushEdgeOne(): Promise<Array<string>> {
-	return await getByLines('EdgeOne', 'https://api.edgeone.ai/ips');
+	return await getFromSub('EdgeOne', flushEdgeOneV4, flushEdgeOneV6);
 }
 
 export async function flushCloudflareV4(): Promise<Array<string>> {
