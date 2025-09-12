@@ -4,7 +4,7 @@ import type { IMiddleware } from '../utils/interface';
 
 const parameterMid: IMiddleware = async (ctx, next) => {
 	const parsedUrl = new URL(ctx.req.url ?? '', `http://${ctx.req.headers.host}`);
-	ctx.getQuery = parsedUrl.searchParams;
+	ctx.getQuery = Object.fromEntries(parsedUrl.searchParams.entries());
 	const form = formidable({});
 	if (Number(ctx.req.headers['content-length']) > 0) {
 		try {

@@ -13,13 +13,13 @@ export abstract class VenDriver {
 
 export interface IContext extends ITransports {
 	method: string;
-	requestParams: any;
-	requestFiles: any;
-	getQuery: any;
-	routerParams: any;
+	requestParams: Record<string, unknown>;
+	requestFiles: Record<string, unknown>;
+	getQuery: Record<string, unknown>;
+	routerParams: Record<string, unknown>;
 	logger: Logger;
-	body: any;
-	user: any;
+	body: unknown;
+	user: unknown;
 	code: number;
 }
 
@@ -30,6 +30,6 @@ export interface ITransports {
 
 export type IController = (ctx: IContext) => Promise<void>;
 
-export type INext = () => Promise<any>;
+export type INext = () => Promise<void>;
 
-export type IMiddleware = (ctx: IContext, next: () => Promise<any>) => Promise<void>;
+export type IMiddleware = (ctx: IContext, next: INext) => Promise<void>;

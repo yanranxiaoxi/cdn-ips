@@ -218,6 +218,64 @@ GET https://cdn-ips.api.soraharu.com/health/live
 }
 ```
 
+## 调度器 API
+
+### 调度器状态
+
+获取自动缓存预更新调度器的状态。
+
+```
+GET https://cdn-ips.api.soraharu.com/scheduler/status
+```
+
+#### 响应
+
+```json
+{
+	"id": "cache-preupdate",
+	"name": "Cache Preupdate Task",
+	"interval": 600000,
+	"enabled": true,
+	"lastRun": "2024-01-01T12:00:00.000Z",
+	"nextRun": "2024-01-01T12:10:00.000Z",
+	"errorCount": 0
+}
+```
+
+## 自动缓存管理
+
+服务包含一个自动调度器，具有以下功能：
+
+- **启动时执行**：服务启动时立即运行缓存预更新
+- **每 10 分钟运行**：自动更新所有 CDN 提供商的缓存
+- **错误处理**：记录错误次数但继续运行
+- **接口控制**：可通过环境变量禁用
+
+### 环境变量
+
+#### 缓存预更新接口控制
+
+控制手动缓存预更新端点是否可用：
+
+```bash
+# 启用缓存预更新端点
+ENABLE_CACHE_PREUPDATE=true
+
+# 禁用缓存预更新端点（默认）
+ENABLE_CACHE_PREUPDATE=false
+```
+
+**支持的值：**
+
+- `true`、`1`、`yes` - 启用端点
+- `false`、`0`、`no` - 禁用端点
+
+**注意事项：**
+
+- 禁用后，手动调用 `/cache/preupdate` 将返回 404 错误
+- 自动调度器继续运行，不受此设置影响
+- 其他端点（如 `/cache/status`、`/scheduler/status`）不受影响
+
 ## 部署
 
 ### 镜像信息

@@ -11,8 +11,8 @@ export class Venation extends Router {
 	public addDriver(driver: VenNodeDriver) {
 		driver.onRequest(async (req, res) => {
 			const ctx: any = {
-				req: req,
-				res: res,
+				req,
+				res,
 				method: req.method ?? '',
 				requestParams: {},
 				requestFiles: {},

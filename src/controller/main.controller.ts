@@ -6,9 +6,9 @@ import { Controller } from './controller';
 class Main extends Controller {
 	public async get(ctx: IContext) {
 		// 输入长度限制
-		const providersParam = ctx.getQuery.get('providers') || Object.values(EProviders).join(',');
-		const versionParam = ctx.getQuery.get('version') || EVersion.ALL;
-		const formatParam = ctx.getQuery.get('format') || EFormat.JSON;
+		const providersParam = (ctx.getQuery.providers as string) || Object.values(EProviders).join(',');
+		const versionParam = (ctx.getQuery.version as string) || EVersion.ALL;
+		const formatParam = (ctx.getQuery.format as string) || EFormat.JSON;
 
 		// 验证输入长度
 		if (providersParam.length > 1000) {
@@ -51,7 +51,11 @@ class Main extends Controller {
 			throw new BasicException(ParamsExceptionCode.InvalidOrFormatError, JSON.stringify(unverified));
 		}
 
-		const transformedData = await getTransformedData(params.queryProviders, params.queryVersion, params.queryFormat);
+		const transformedData = await getTransformedData(
+			params.queryProviders as EProviders[],
+			params.queryVersion as EVersion,
+			params.queryFormat as EFormat,
+		);
 
 		switch (params.queryFormat) {
 			case EFormat.COMMA:

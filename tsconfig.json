@@ -2,11 +2,21 @@
 	"compilerOptions": {
 		"target": "esnext",
 		"module": "commonjs",
+		"moduleResolution": "node",
 		"outDir": "./dist",
 		"strict": true,
 		"esModuleInterop": true,
-		"baseUrl": "./", // 设置基础路径
-		"paths": {}
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"baseUrl": "./",
+		"paths": {
+			"@/*": ["src/*"]
+		}
 	},
-	"include": ["src/**/*"]
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "logs"]
 }

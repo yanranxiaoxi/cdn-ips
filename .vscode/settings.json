@@ -9,5 +9,17 @@
 	"files.associations": {
 		"*.json": "jsonc"
 	},
-	"cSpell.words": ["ALTERNCLOUD", "Arvancloud", "CACHEFLY", "CDNV", "EDGEONE", "Fastly", "Gcore", "KEYCDN", "Medianova", "yanranxiaoxi"]
+	"cSpell.words": [
+		"ALTERNCLOUD",
+		"Arvancloud",
+		"CACHEFLY",
+		"CDNV",
+		"EDGEONE",
+		"Fastly",
+		"Gcore",
+		"KEYCDN",
+		"Medianova",
+		"Preupdate",
+		"yanranxiaoxi"
+	]
 }

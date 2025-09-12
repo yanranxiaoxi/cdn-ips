@@ -218,6 +218,64 @@ GET https://cdn-ips.api.soraharu.com/health/live
 }
 ```
 
+## Scheduler API
+
+### Scheduler Status
+
+Get the status of the automatic cache pre-update scheduler.
+
+```
+GET https://cdn-ips.api.soraharu.com/scheduler/status
+```
+
+#### Response
+
+```json
+{
+	"id": "cache-preupdate",
+	"name": "Cache Preupdate Task",
+	"interval": 600000,
+	"enabled": true,
+	"lastRun": "2024-01-01T12:00:00.000Z",
+	"nextRun": "2024-01-01T12:10:00.000Z",
+	"errorCount": 0
+}
+```
+
+## Automatic Cache Management
+
+The service includes an automatic scheduler that:
+
+- **Executes on startup**: Immediately runs cache pre-update when the service starts
+- **Runs every 10 minutes**: Automatically updates cache for all CDN providers
+- **Error handling**: Records error counts but continues running
+- **Interface control**: Can be disabled via environment variable
+
+### Environment Variables
+
+#### Cache Pre-update Interface Control
+
+Control whether the manual cache pre-update endpoint is available:
+
+```bash
+# Enable cache pre-update endpoint (default)
+ENABLE_CACHE_PREUPDATE=true
+
+# Disable cache pre-update endpoint
+ENABLE_CACHE_PREUPDATE=false
+```
+
+**Supported values:**
+
+- `true`, `1`, `yes` - Enable endpoint
+- `false`, `0`, `no` - Disable endpoint
+
+**Notes:**
+
+- When disabled, manual calls to `/cache/preupdate` will return 404
+- The automatic scheduler continues to run regardless of this setting
+- Other endpoints (like `/cache/status`, `/scheduler/status`) are not affected
+
 ## Deployment
 
 ### Container Image Information

@@ -308,13 +308,38 @@ class Cache extends Controller {
 	 * 获取缓存状态信息
 	 */
 	private getCacheStatus(providers: EProviders[]) {
-		const status: any = {
+		const status: {
+			updatedAt: string;
+			providers: Record<
+				string,
+				{
+					all: {
+						exists: boolean;
+						optimismExists: boolean;
+						ipCount: number;
+						optimismIpCount: number;
+					};
+					v4: {
+						exists: boolean;
+						optimismExists: boolean;
+						ipCount: number;
+						optimismIpCount: number;
+					};
+					v6: {
+						exists: boolean;
+						optimismExists: boolean;
+						ipCount: number;
+						optimismIpCount: number;
+					};
+				}
+			>;
+		} = {
 			updatedAt: new Date().toISOString(),
 			providers: {},
 		};
 
 		for (const provider of providers) {
-			const providerStatus: any = {
+			const providerStatus = {
 				all: this.getCacheInfo(provider),
 				v4: this.getCacheInfo(`${provider}V4`),
 				v6: this.getCacheInfo(`${provider}V6`),
@@ -329,7 +354,12 @@ class Cache extends Controller {
 	/**
 	 * 获取单个缓存的详细信息
 	 */
-	private getCacheInfo(cacheKey: string) {
+	private getCacheInfo(cacheKey: string): {
+		exists: boolean;
+		optimismExists: boolean;
+		ipCount: number;
+		optimismIpCount: number;
+	} {
 		const data = cache.get(cacheKey);
 		const optimismData = cache.get(`${cacheKey}Optimism`);
 

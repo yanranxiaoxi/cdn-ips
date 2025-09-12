@@ -97,13 +97,13 @@ export enum EFormat {
 }
 
 // 并发控制 Map，避免重复请求
-const pendingRequests = new Map<string, Promise<Array<string>>>();
+const pendingRequests = new Map<string, Promise<string[]>>();
 
-async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>): Promise<Array<string>> {
-	const data: Array<string> | undefined = cache.get(tag);
+async function getCachedData(tag: string, flushFn: () => Promise<string[]>): Promise<string[]> {
+	const data: string[] | undefined = cache.get(tag);
 	if (data) return data;
 
-	const dataOptimism: Array<string> | undefined = cache.get(tag + 'Optimism');
+	const dataOptimism: string[] | undefined = cache.get(tag + 'Optimism');
 	if (dataOptimism) {
 		// 异步更新缓存，不阻塞当前请求
 		flushFn().catch((error) => {
@@ -133,10 +133,10 @@ async function getCachedData(tag: string, flushFn: () => Promise<Array<string>>)
 async function matchVersionFn(
 	version: EVersion,
 	provider: EProviders,
-	allFn: () => Promise<Array<string>>,
-	v4Fn: () => Promise<Array<string>>,
-	v6Fn: () => Promise<Array<string>>,
-): Promise<Array<string>> {
+	allFn: () => Promise<string[]>,
+	v4Fn: () => Promise<string[]>,
+	v6Fn: () => Promise<string[]>,
+): Promise<string[]> {
 	switch (version) {
 		case EVersion.V4:
 			return await getCachedData(`${provider}V4`, v4Fn);
@@ -173,7 +173,7 @@ const PROVIDER_FUNCTIONS = {
 	[EProviders.ALTERNCLOUD]: { all: flushALTERNcloud, v4: flushALTERNcloudV4, v6: flushALTERNcloudV6 },
 } as const;
 
-async function getProviderData(provider: EProviders, version: EVersion): Promise<Array<string>> {
+async function getProviderData(provider: EProviders, version: EVersion): Promise<string[]> {
 	const providerFuncs = PROVIDER_FUNCTIONS[provider];
 	if (!providerFuncs) {
 		logger.warn(`Unknown provider: ${provider}`);
@@ -185,12 +185,12 @@ async function getProviderData(provider: EProviders, version: EVersion): Promise
 
 type TCompositeObject = {
 	[P in EProviders]?: {
-		[EVersion.V4]?: Array<string>;
-		[EVersion.V6]?: Array<string>;
+		[EVersion.V4]?: string[];
+		[EVersion.V6]?: string[];
 	};
 };
 
-async function getCompositeObject(providers: Array<EProviders>, version: EVersion): Promise<TCompositeObject> {
+async function getCompositeObject(providers: EProviders[], version: EVersion): Promise<TCompositeObject> {
 	const result: TCompositeObject = {};
 	for (const provider of providers) {
 		if (!result[provider]) {
@@ -206,8 +206,8 @@ async function getCompositeObject(providers: Array<EProviders>, version: EVersio
 	return result;
 }
 
-async function getPlainObject(providers: Array<EProviders>, version: EVersion): Promise<Array<string>> {
-	const returns: Array<string> = [];
+async function getPlainObject(providers: EProviders[], version: EVersion): Promise<string[]> {
+	const returns: string[] = [];
 
 	for (const provider of providers) {
 		returns.push(...(await getProviderData(provider, version)));
@@ -216,7 +216,7 @@ async function getPlainObject(providers: Array<EProviders>, version: EVersion): 
 	return Array.from(new Set(returns));
 }
 
-export async function getTransformedData(providers: Array<EProviders>, version: EVersion, format: EFormat): Promise<string> {
+export async function getTransformedData(providers: EProviders[], version: EVersion, format: EFormat): Promise<string> {
 	switch (format) {
 		case EFormat.COMMA: {
 			return (await getPlainObject(providers, version)).join(',');
@@ -235,8 +235,10 @@ export async function getTransformedData(providers: Array<EProviders>, version: 
 		}
 		case EFormat.JSON_TRANSPOSED: {
 			const jsonObject = await getCompositeObject(providers, version);
-			const transformedObject: { [EVersion.V4]: { [P in EProviders]?: Array<string> }; [EVersion.V6]: { [P in EProviders]?: Array<string> } } =
-				{ [EVersion.V4]: {}, [EVersion.V6]: {} };
+			const transformedObject: { [EVersion.V4]: { [P in EProviders]?: string[] }; [EVersion.V6]: { [P in EProviders]?: string[] } } = {
+				[EVersion.V4]: {},
+				[EVersion.V6]: {},
+			};
 			for (const provider of providers) {
 				if (version === EVersion.ALL) {
 					transformedObject[EVersion.V4][provider] = jsonObject[provider]![EVersion.V4]!;
@@ -249,7 +251,7 @@ export async function getTransformedData(providers: Array<EProviders>, version: 
 		}
 		case EFormat.JSON_WITHOUT_PROVIDERS: {
 			const jsonObject = await getCompositeObject(providers, version);
-			const transformedObject: { [EVersion.V4]: Array<string>; [EVersion.V6]: Array<string> } = { [EVersion.V4]: [], [EVersion.V6]: [] };
+			const transformedObject: { [EVersion.V4]: string[]; [EVersion.V6]: string[] } = { [EVersion.V4]: [], [EVersion.V6]: [] };
 			for (const provider of providers) {
 				if (version === EVersion.ALL) {
 					transformedObject[EVersion.V4].push(...jsonObject[provider]![EVersion.V4]!);
@@ -262,7 +264,7 @@ export async function getTransformedData(providers: Array<EProviders>, version: 
 		}
 		case EFormat.JSON_WITHOUT_VERSIONS: {
 			const jsonObject = await getCompositeObject(providers, version);
-			const transformedObject: { [provider: string]: Array<string> } = {};
+			const transformedObject: Record<string, string[]> = {};
 			for (const provider of providers) {
 				transformedObject[provider] = [];
 				if (version === EVersion.ALL) {

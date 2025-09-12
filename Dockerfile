@@ -5,6 +5,7 @@ ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=3001
 ENV LOG_LEVEL=info
 ENV PROJECT_NAME=cdn-ips
+ENV ENABLE_CACHE_PREUPDATE=false
 COPY ./dist/index.js /home/node/app/
 EXPOSE 3001/tcp
 ENTRYPOINT [ "node", "/home/node/app/index.js" ]

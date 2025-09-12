@@ -77,6 +77,7 @@ export class SimpleScheduler {
 
 	/**
 	 * 执行任务
+	 * @param taskFunction - 要执行的任务函数
 	 */
 	private async executeTask(taskFunction: () => Promise<void>): Promise<void> {
 		const startTime = Date.now();
