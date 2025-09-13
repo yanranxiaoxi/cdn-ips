@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+import * as packageJson from '../../package.json';
+
 /**
  * 验证必需的环境变量
  * @param name - 环境变量名称
@@ -55,7 +57,7 @@ export const CONFIG = {
 	port: validatePort(process.env.SERVER_PORT, 80),
 
 	envProduct: validateEnvVar('ENV_PRODUCT', process.env.ENV_PRODUCT, 'development'),
-	projectName: validateEnvVar('PROJECT_NAME', process.env.PROJECT_NAME, 'cdn-ips'),
+	projectName: validateEnvVar('PROJECT_NAME', process.env.PROJECT_NAME, packageJson.name),
 	logLevel: validateEnvVar('LOG_LEVEL', process.env.LOG_LEVEL, 'info'),
 
 	// 控制是否开放缓存预更新接口
