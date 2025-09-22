@@ -1,9 +1,9 @@
-import { hrtime } from 'process';
-
-import { BasicException } from '../exceptions/basic.exception';
 import type { IMiddleware } from '../utils/interface';
 
-const api = (): IMiddleware => {
+import { hrtime } from 'node:process';
+import { BasicException } from '../exceptions/basic.exception';
+
+function api(): IMiddleware {
 	return async (ctx, next) => {
 		// ctx.logger.info(`${ctx.req.method()}`, `${ctx.req.url()}`, `${ctx.req.querystring()}`);
 		const start = hrtime.bigint();
@@ -25,10 +25,12 @@ const api = (): IMiddleware => {
 				if (!ctx.res.writableEnded) {
 					ctx.res.write(body);
 				}
-			} else {
+			}
+			else {
 				ctx.logger.debug('json api ignore');
 			}
-		} catch (ex: any) {
+		}
+		catch (ex: any) {
 			if (!(ex instanceof BasicException)) {
 				ctx.logger.error('json api', ex);
 				ex.code = 500;
@@ -48,6 +50,6 @@ const api = (): IMiddleware => {
 		const end = hrtime.bigint();
 		ctx.logger.info(`Benchmark took ${end - start} nanoseconds`);
 	};
-};
+}
 
 export default api;

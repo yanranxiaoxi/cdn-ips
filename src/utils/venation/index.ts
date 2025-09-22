@@ -1,7 +1,7 @@
 import type { Logger } from 'log4js';
 
-import { Router } from '../router';
 import type { VenNodeDriver } from './driver';
+import { Router } from '../router';
 
 export class Venation extends Router {
 	public constructor(public readonly logger: Logger) {
@@ -27,11 +27,13 @@ export class Venation extends Router {
 				if (!matched) {
 					res.statusCode = 404;
 					res.end('404 Not Found !!!');
-				} else {
+				}
+				else {
 					await this.run(ctx as any, path === '/' ? '' : path, routeIndex);
 					res.end();
 				}
-			} catch (ex) {
+			}
+			catch (ex) {
 				ctx.logger.error(ex);
 				res.statusCode = 500;
 				res.end('500 Internal Server Error !!!');

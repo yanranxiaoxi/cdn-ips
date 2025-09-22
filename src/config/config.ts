@@ -1,6 +1,6 @@
-import 'dotenv/config';
-
+import process from 'node:process';
 import * as packageJson from '../../package.json';
+import 'dotenv/config';
 
 /**
  * 验证必需的环境变量
@@ -24,7 +24,7 @@ function validateEnvVar(name: string, value: string | undefined, defaultValue?: 
  */
 function validatePort(port: string | undefined, defaultPort: number): number {
 	const portNum = port ? Number(port) : defaultPort;
-	if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+	if (Number.isNaN(portNum) || portNum < 1 || portNum > 65535) {
 		throw new Error(`Invalid port number: ${port}. Must be between 1 and 65535`);
 	}
 	return portNum;

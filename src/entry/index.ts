@@ -17,7 +17,8 @@ import { VenNodeDriver } from '../utils/venation/driver';
 		try {
 			const result = await cacheController.preupdateCache();
 			logger.info(`Scheduled cache preupdate completed: ${result.message}`);
-		} catch (error) {
+		}
+		catch (error) {
 			logger.error('Scheduled cache preupdate failed:', error);
 			throw error; // 重新抛出错误以便调度器处理
 		}

@@ -68,7 +68,8 @@ export class Router {
 	}
 
 	/**
-	 * 通过path 匹配是否以 node 开头
+	 * 通过 path 匹配是否以 node 开头
+	 * @param ctx - 路由上下文
 	 * @param node - 路由节点
 	 * @param path - 路由路径
 	 * @returns 匹配结果，如果匹配返回下一级 path, 未匹配返回 false
@@ -80,10 +81,11 @@ export class Router {
 			}
 			// 当前字符串路由分析出的参数 匹配路径：/a/:name1/b/:name2  路径：/a/value1/b/value2  解析结果： {name1:value1, name2:value2}
 			if (node.includes('/:')) {
-				const regex = new RegExp('^' + node.replace(/\/:[^\/]+/g, '/([^/]+)'));
+				const regex = new RegExp(`^${node.replace(/\/:[^/]+/g, '/([^/]+)')}`);
 				if (regex.exec(path)) {
 					return path.replace(regex, '');
-				} else {
+				}
+				else {
 					return false;
 				}
 			}
@@ -94,8 +96,9 @@ export class Router {
 				}
 				return false;
 			}
-		} else if (node instanceof RegExp) {
-			const reg = new RegExp('^' + node.source);
+		}
+		else if (node instanceof RegExp) {
+			const reg = new RegExp(`^${node.source}`);
 			if (reg.test(path)) {
 				return path.replace(reg, '');
 			}
@@ -152,15 +155,15 @@ export class Router {
 	 * @param ctx - 路由上下文
 	 * @param node - 路由节点
 	 * @param path - 路由路径
-	 * @returns
+	 * @returns 提取后的路由路径
 	 */
 	public parseRouteParams(ctx: IContext, node: TNode, path: string) {
 		if (typeof node === 'string') {
 			if (node.includes('/:')) {
-				const regex = new RegExp('^' + node.replace(/\/:[^\/]+/g, '/([^/]+)'));
+				const regex = new RegExp(`^${node.replace(/\/:[^/]+/g, '/([^/]+)')}`);
 				const values = path.match(regex);
 				const keys: Array<string> = [];
-				node.replace(/\/:([^\/]+)/g, (match, key) => {
+				node.replace(/\/:([^/]+)/g, (match, key) => {
 					keys.push(key);
 					return '';
 				});
@@ -171,15 +174,17 @@ export class Router {
 					}
 				}
 				return nextUrl ?? '';
-			} else {
+			}
+			else {
 				const nextUrl = path.slice(node.length);
 				if (nextUrl.startsWith('/') || nextUrl === '') {
 					return nextUrl;
 				}
 				return '';
 			}
-		} else if (node instanceof RegExp) {
-			const reg = new RegExp('^' + node.source);
+		}
+		else if (node instanceof RegExp) {
+			const reg = new RegExp(`^${node.source}`);
 			if (reg.test(path)) {
 				return path.replace(reg, '');
 			}
@@ -190,9 +195,9 @@ export class Router {
 	/**
 	 * 路由执行器
 	 * @param ctx - 路由上下文
-	 * @param url - 查询路径
-	 * @param mids - 路由中间件
-	 * @returns
+	 * @param path - 路由路径
+	 * @param routeIndex - 路由索引
+	 * @returns 路由执行器
 	 */
 	public async run(ctx: IContext, path: string, routeIndex: Array<number>) {
 		const subindex = routeIndex.pop();
@@ -202,7 +207,8 @@ export class Router {
 				if (subindex !== undefined) {
 					await this.childRouterList[subindex].run(ctx, nextPath, routeIndex);
 				}
-			} else {
+			}
+			else {
 				const currentMid = router.mids[index];
 				await currentMid(ctx, async () => await execute(router, index + 1)); // 执行当前中间件并调用下一个
 			}

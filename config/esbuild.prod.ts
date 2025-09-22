@@ -1,5 +1,5 @@
+import process from 'node:process';
 import esbuild from 'esbuild';
-
 import common from './esbuild.common';
 
 (async () => {
@@ -7,7 +7,8 @@ import common from './esbuild.common';
 	const ctx = await esbuild.context(common);
 	if (process.argv.includes('--watch')) {
 		ctx.watch();
-	} else {
+	}
+	else {
 		await ctx.rebuild();
 		process.exit();
 	}

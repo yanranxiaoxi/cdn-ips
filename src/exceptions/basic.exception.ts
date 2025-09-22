@@ -40,7 +40,7 @@ export const BasicExceptionCode = {
 	},
 	BadRequest: {
 		code: 400,
-		msg: "Bad Request: The client's request is invalid.",
+		msg: 'Bad Request: The client\'s request is invalid.',
 	},
 	Unauthorized: {
 		code: 401,

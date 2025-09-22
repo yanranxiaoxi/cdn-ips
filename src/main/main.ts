@@ -1,30 +1,30 @@
 import logger from '../utils/logger';
 import {
 	cache,
-	flushALTERNcloud,
-	flushALTERNcloudV4,
-	flushALTERNcloudV6,
 	flushAkamai,
 	flushAkamaiV4,
 	flushAkamaiV6,
+	flushALTERNcloud,
+	flushALTERNcloudV4,
+	flushALTERNcloudV6,
 	flushArvancloud,
 	flushArvancloudV4,
 	flushArvancloudV6,
 	flushBunny,
 	flushBunnyV4,
 	flushBunnyV6,
-	flushCDN77,
-	flushCDN77V4,
-	flushCDN77V6,
 	flushCacheFly,
 	flushCacheFlyV4,
 	flushCacheFlyV6,
-	flushCloudFront,
-	flushCloudFrontV4,
-	flushCloudFrontV6,
+	flushCDN77,
+	flushCDN77V4,
+	flushCDN77V6,
 	flushCloudflare,
 	flushCloudflareV4,
 	flushCloudflareV6,
+	flushCloudFront,
+	flushCloudFrontV4,
+	flushCloudFrontV6,
 	flushEdgeOne,
 	flushEdgeOneV4,
 	flushEdgeOneV6,
@@ -101,9 +101,10 @@ const pendingRequests = new Map<string, Promise<string[]>>();
 
 async function getCachedData(tag: string, flushFn: () => Promise<string[]>): Promise<string[]> {
 	const data: string[] | undefined = cache.get(tag);
-	if (data) return data;
+	if (data)
+		return data;
 
-	const dataOptimism: string[] | undefined = cache.get(tag + 'Optimism');
+	const dataOptimism: string[] | undefined = cache.get(`${tag}Optimism`);
 	if (dataOptimism) {
 		// 异步更新缓存，不阻塞当前请求
 		flushFn().catch((error) => {
@@ -124,7 +125,8 @@ async function getCachedData(tag: string, flushFn: () => Promise<string[]>): Pro
 	try {
 		const result = await requestPromise;
 		return result;
-	} finally {
+	}
+	finally {
 		// 清理 pending 请求
 		pendingRequests.delete(tag);
 	}
@@ -199,7 +201,8 @@ async function getCompositeObject(providers: EProviders[], version: EVersion): P
 		if (version === EVersion.ALL) {
 			result[provider]![EVersion.V4] = await getProviderData(provider, EVersion.V4);
 			result[provider]![EVersion.V6] = await getProviderData(provider, EVersion.V6);
-		} else {
+		}
+		else {
 			result[provider]![version] = await getProviderData(provider, version);
 		}
 	}
@@ -228,7 +231,7 @@ export async function getTransformedData(providers: EProviders[], version: EVers
 			return (await getPlainObject(providers, version)).join('\n');
 		}
 		case EFormat.JSON_ARRAY_WITHOUT_SQUARE_BRACKETS: {
-			return `${(await getPlainObject(providers, version)).map((item) => `"${item}"`).join(',')}`;
+			return `${(await getPlainObject(providers, version)).map(item => `"${item}"`).join(',')}`;
 		}
 		case EFormat.JSON: {
 			return JSON.stringify(await getCompositeObject(providers, version));
@@ -243,7 +246,8 @@ export async function getTransformedData(providers: EProviders[], version: EVers
 				if (version === EVersion.ALL) {
 					transformedObject[EVersion.V4][provider] = jsonObject[provider]![EVersion.V4]!;
 					transformedObject[EVersion.V6][provider] = jsonObject[provider]![EVersion.V6]!;
-				} else {
+				}
+				else {
 					transformedObject[version][provider] = jsonObject[provider]![version]!;
 				}
 			}
@@ -256,7 +260,8 @@ export async function getTransformedData(providers: EProviders[], version: EVers
 				if (version === EVersion.ALL) {
 					transformedObject[EVersion.V4].push(...jsonObject[provider]![EVersion.V4]!);
 					transformedObject[EVersion.V6].push(...jsonObject[provider]![EVersion.V6]!);
-				} else {
+				}
+				else {
 					transformedObject[version].push(...jsonObject[provider]![version]!);
 				}
 			}
@@ -270,7 +275,8 @@ export async function getTransformedData(providers: EProviders[], version: EVers
 				if (version === EVersion.ALL) {
 					transformedObject[provider].push(...jsonObject[provider]![EVersion.V4]!);
 					transformedObject[provider].push(...jsonObject[provider]![EVersion.V6]!);
-				} else {
+				}
+				else {
 					transformedObject[provider].push(...jsonObject[provider]![version]!);
 				}
 			}

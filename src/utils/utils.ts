@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 import logger from './logger';
 
@@ -18,7 +18,8 @@ export function getOrInitMap<K, V>(map: Map<K, V>, key: K, initializer: (key: K)
 	const value = map.get(key);
 	if (value) {
 		return value;
-	} else {
+	}
+	else {
 		const newValue = initializer(key);
 		map.set(key, newValue);
 		return newValue;
@@ -39,7 +40,7 @@ export function getUuid() {
 export async function httpGet(url: string, args?: { [key: string]: string | number | boolean }): Promise<string | undefined> {
 	if (typeof args === 'object') {
 		url += '?';
-		let argKVs = [];
+		const argKVs = [];
 		for (const [key, value] of Object.entries(args)) {
 			if (value !== undefined && value !== null) {
 				argKVs.push(`${encodeURIComponent(key)}=${encodeURIComponent(value.toString())}`);
@@ -65,15 +66,18 @@ export async function httpGet(url: string, args?: { [key: string]: string | numb
 		clearTimeout(timeoutId);
 		if (response.ok) {
 			return await response.text();
-		} else {
+		}
+		else {
 			logger.error('HTTP GET failed:', url, '\n', response.status, response.statusText);
 			return undefined;
 		}
-	} catch (error) {
+	}
+	catch (error) {
 		clearTimeout(timeoutId);
 		if (error instanceof Error && error.name === 'AbortError') {
 			logger.error('HTTP GET timeout:', url);
-		} else {
+		}
+		else {
 			logger.error('HTTP GET failed:', url, '\n', error);
 		}
 		return undefined;
@@ -94,7 +98,7 @@ export function multiLineStrToArray(str: string): Array<string> {
 			strList.splice(index, 1);
 		}
 	});
-	return strList.map((value) => value.trim());
+	return strList.map(value => value.trim());
 }
 
 /**
@@ -104,8 +108,9 @@ export function multiLineStrToArray(str: string): Array<string> {
  * @returns 验证结果
  */
 export function isValidIPv4Address(ip: string): boolean {
-	const ipv4Regex =
-		/^((?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5]))$/;
+	const ipv4Regex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5]))$/;
 	return ipv4Regex.test(ip);
 }
 
@@ -116,8 +121,9 @@ export function isValidIPv4Address(ip: string): boolean {
  * @returns 验证结果
  */
 export function isValidIPv6Address(ip: string): boolean {
-	const ipv6Regex =
-		/^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9]))\.){3,3}(25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9])))))$/;
+	const ipv6Regex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d))\.){3}(25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d)))))$/;
 	return ipv6Regex.test(ip);
 }
 
@@ -138,8 +144,9 @@ export function isValidIP(ip: string): boolean {
  * @returns 验证结果
  */
 export function isValidIPv4CIDR(cidr: string): boolean {
-	const cidrRegex =
-		/^((?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5]))(\/([0-9]|[1-2][0-9]|3[0-2]))?$/;
+	const cidrRegex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5]))(\/(\d|[12]\d|3[0-2]))?$/;
 	return cidrRegex.test(cidr);
 }
 
@@ -150,8 +157,9 @@ export function isValidIPv4CIDR(cidr: string): boolean {
  * @returns 验证结果
  */
 export function isValidIPv6CIDR(cidr: string): boolean {
-	const cidrRegex =
-		/^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9]))\.){3,3}(25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9])))))(\/([1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$/;
+	const cidrRegex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d))\.){3}(25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d)))))(\/([1-9]|[1-9]\d|1[01]\d|12[0-8]))?$/;
 	return cidrRegex.test(cidr);
 }
 
@@ -173,8 +181,9 @@ export function isValidCIDR(cidr: string): boolean {
  * @returns 验证结果
  */
 export function isValidIPv4StrictCIDR(cidr: string): boolean {
-	const cidrRegex =
-		/^((?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:[01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5]))(\/([0-9]|[1-2][0-9]|3[0-2]))$/;
+	const cidrRegex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.(?:[01]?\d{1,2}|2[0-4]\d|25[0-5]))(\/(\d|[12]\d|3[0-2]))$/;
 	return cidrRegex.test(cidr);
 }
 
@@ -186,8 +195,9 @@ export function isValidIPv4StrictCIDR(cidr: string): boolean {
  * @returns 验证结果
  */
 export function isValidIPv6StrictCIDR(cidr: string): boolean {
-	const cidrRegex =
-		/^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9]))\.){3,3}(25[0-5]|(2[0-4][0-9])|(1[0-9]{2})|([1-9]?[0-9])))))(\/([1-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))$/;
+	const cidrRegex
+		// eslint-disable-next-line regexp/no-unused-capturing-group
+		= /^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d))\.){3}(25[0-5]|(2[0-4]\d)|(1\d{2})|([1-9]?\d)))))(\/([1-9]|[1-9]\d|1[01]\d|12[0-8]))$/;
 	return cidrRegex.test(cidr);
 }
 
@@ -215,12 +225,15 @@ export function transformIPToCIDR(ips: Array<string>): Array<string> {
 		if (isValidCIDR(ip)) {
 			if (isValidIPv4Address(ip)) {
 				returns.push(`${ip}/32`);
-			} else if (isValidIPv6Address(ip)) {
+			}
+			else if (isValidIPv6Address(ip)) {
 				returns.push(`${ip}/128`);
-			} else {
+			}
+			else {
 				returns.push(ip); // 已经是严格 CIDR 格式
 			}
-		} else {
+		}
+		else {
 			logger.warn('Invalid IP address format:', ip);
 		}
 	}

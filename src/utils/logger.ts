@@ -1,6 +1,6 @@
 import type { Configuration } from 'log4js';
+import { join } from 'node:path';
 import log4js from 'log4js';
-import { join } from 'path';
 
 import { CONFIG } from '../config/config';
 

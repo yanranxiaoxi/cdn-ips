@@ -1,6 +1,6 @@
-import formidable from 'formidable';
-
 import type { IMiddleware } from '../utils/interface';
+
+import formidable from 'formidable';
 
 const parameterMid: IMiddleware = async (ctx, next) => {
 	const parsedUrl = new URL(ctx.req.url ?? '', `http://${ctx.req.headers.host}`);
@@ -21,19 +21,22 @@ const parameterMid: IMiddleware = async (ctx, next) => {
 								exchangeFields[key] = fields[key];
 								if (Array.isArray(fields[key]) && fields[key]?.length === 1) {
 									exchangeFields[key] = (fields[key] as any)[0];
-								} else {
+								}
+								else {
 									exchangeFields[key] = fields[key];
 								}
 							}
 						}
 						ctx.requestParams = exchangeFields;
-					} else {
+					}
+					else {
 						ctx.requestParams = fields;
 					}
 					resolve(null);
 				});
 			});
-		} catch (err: any) {
+		}
+		catch (err: any) {
 			ctx.res.writeHead(err.httpCode || 400, { 'Content-type': 'text/plain' });
 		}
 	}

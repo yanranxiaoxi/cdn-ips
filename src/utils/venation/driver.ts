@@ -1,6 +1,6 @@
-import type { ServerResponse } from 'http';
-import http from 'http';
 import type { Logger } from 'log4js';
+import type { ServerResponse } from 'node:http';
+import http from 'node:http';
 
 import { VenDriver } from '../interface';
 import { IRequest, IResponse } from './transport';

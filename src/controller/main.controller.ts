@@ -1,6 +1,6 @@
+import type { IContext } from '../utils/interface';
 import { BasicException, ParamsExceptionCode } from '../exceptions/basic.exception';
 import { EFormat, EProviders, EVersion, getTransformedData } from '../main/main';
-import type { IContext } from '../utils/interface';
 import { Controller } from './controller';
 
 class Main extends Controller {

@@ -92,7 +92,8 @@ export class SimpleScheduler {
 			this.taskStatus.nextRun = new Date(Date.now() + this.taskStatus.interval);
 
 			logger.info(`Scheduled cache preupdate completed - duration: ${duration}ms`);
-		} catch (error) {
+		}
+		catch (error) {
 			const duration = Date.now() - startTime;
 			this.taskStatus.errorCount++;
 			this.taskStatus.nextRun = new Date(Date.now() + this.taskStatus.interval);

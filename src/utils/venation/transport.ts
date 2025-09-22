@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'node:http';
 
 /**
  * 此文件用来抽象通信协议层
@@ -21,10 +21,12 @@ export class IResponse extends ServerResponse<IRequest> {
 			if (Array.isArray(headers)) {
 				headers.push(value);
 				this.setHeader(name, headers);
-			} else {
+			}
+			else {
 				this.setHeader(name, [headers.toString(), value]);
 			}
-		} else {
+		}
+		else {
 			this.setHeader(name, value);
 		}
 	}

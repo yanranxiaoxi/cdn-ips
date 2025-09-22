@@ -1,5 +1,5 @@
-import NodeCache from '@cacheable/node-cache';
 import dns from 'node:dns/promises';
+import NodeCache from '@cacheable/node-cache';
 
 import { BasicException, BasicExceptionCode } from '../exceptions/basic.exception';
 import logger from '../utils/logger';
@@ -22,17 +22,17 @@ export const cache = new NodeCache({
 });
 
 function throwError(name: string, message?: string): any {
-	message =
-		message ||
-		'Get ' +
-			name +
-			" CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues";
+	message
+		= message
+			|| `Get ${
+				name
+			} CDN provider's IPs API error. This should be a temporary issue. Send report: https://github.com/yanranxiaoxi/cdn-ips/issues`;
 	throw new BasicException(BasicExceptionCode.InternalServerError, message);
 }
 
 function returnDirectly(name: string, data: Array<string> = []): Array<string> {
 	cache.set(name, data, CACHE_CONFIG.STD_TTL);
-	cache.set(name + 'Optimism', data, CACHE_CONFIG.OPTIMISM_TTL);
+	cache.set(`${name}Optimism`, data, CACHE_CONFIG.OPTIMISM_TTL);
 	return data;
 }
 
@@ -42,7 +42,8 @@ function getResultObjectByKeys(getResultObject: { [key: string]: any }, keys: Ar
 		if (getResultObject[key]) {
 			if (valueTransFn) {
 				result.push(...getResultObject[key].map(valueTransFn));
-			} else {
+			}
+			else {
 				result.push(...getResultObject[key]);
 			}
 		}
@@ -69,7 +70,7 @@ async function getByLines(name: string, url: string, ranges?: Array<{ start?: st
 
 		returns = transformIPToCIDR(returns);
 		cache.set(name, returns, CACHE_CONFIG.STD_TTL);
-		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(`${name}Optimism`, returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -96,11 +97,11 @@ async function getByJson(
 		const v6Returns = transformIPToCIDR(getResultObjectByKeys(getResultObject, v6Keys, valueTransFn));
 		const returns = [...v4Returns, ...v6Returns];
 		cache.set(name, returns, CACHE_CONFIG.STD_TTL);
-		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
-		cache.set(name + 'V4', v4Returns, CACHE_CONFIG.STD_TTL);
-		cache.set(name + 'V4Optimism', v4Returns, CACHE_CONFIG.OPTIMISM_TTL);
-		cache.set(name + 'V6', v6Returns, CACHE_CONFIG.STD_TTL);
-		cache.set(name + 'V6Optimism', v6Returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(`${name}Optimism`, returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(`${name}V4`, v4Returns, CACHE_CONFIG.STD_TTL);
+		cache.set(`${name}V4Optimism`, v4Returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(`${name}V6`, v6Returns, CACHE_CONFIG.STD_TTL);
+		cache.set(`${name}V6Optimism`, v6Returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -112,7 +113,7 @@ async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn
 	if (v4 && v6) {
 		const returns = [...v4, ...v6];
 		cache.set(name, returns, CACHE_CONFIG.SHORT_TTL);
-		cache.set(name + 'Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
+		cache.set(`${name}Optimism`, returns, CACHE_CONFIG.OPTIMISM_TTL);
 		return returns;
 	}
 	return throwError(name);
@@ -121,7 +122,8 @@ async function getFromSub(name: string, v4Fn: () => Promise<Array<string>>, v6Fn
 async function getFromParent(name: string, parentFn: () => Promise<Array<string>>): Promise<Array<string>> {
 	await parentFn(); // 确保数据已缓存
 	const returns: Array<string> | undefined = cache.get(name);
-	if (returns) return returns;
+	if (returns)
+		return returns;
 	return throwError(name);
 }
 
@@ -254,20 +256,21 @@ export async function flushGoogleCloudV4(): Promise<Array<string>> {
 	logger.info('Resolve:', '_cloud-eoips.googleusercontent.com');
 	dns.setServers(['8.8.8.8', '8.8.4.4', '[2001:4860:4860::8888]', '[2001:4860:4860::8844]']);
 	const dnsResolvedData: Array<Array<string>> = await dns.resolveTxt('_cloud-eoips.googleusercontent.com');
-	const spfRegex = /^v\=spf1 (.+) (\-|\~)all$/;
+	const spfRegex = /^v=spf1 (.+) (-|~)all$/;
 	for (const dataLine of dnsResolvedData) {
 		const regexResult = dataLine.join(' ').match(spfRegex);
 		if (regexResult && regexResult[1]) {
 			const ips = regexResult[1]
 				.split(' ')
-				.filter((item) => item.startsWith('ip4:'))
-				.map((item) => item.slice(4));
+				.filter(item => item.startsWith('ip4:'))
+				.map(item => item.slice(4));
 			if (ips.length > 0) {
 				const returns = transformIPToCIDR(ips);
 				cache.set('GoogleCloudV4', returns, CACHE_CONFIG.SHORT_TTL);
 				cache.set('GoogleCloudV4Optimism', returns, CACHE_CONFIG.OPTIMISM_TTL);
 				return returns;
-			} else {
+			}
+			else {
 				// 当长度为 0 时，表示没有找到 IPv4 地址
 				// 这不应该发生，需要记录日志、缩短缓存时间、并使用乐观缓存的数据替代标准缓存
 				const optimismCacheData: Array<string> | undefined = cache.get('GoogleCloudV4Optimism');
@@ -275,7 +278,8 @@ export async function flushGoogleCloudV4(): Promise<Array<string>> {
 					logger.warn('Google Cloud V4 IPs not found, using optimism cache data instead.');
 					cache.set('GoogleCloudV4', optimismCacheData, 60 * 10); // 缓存 10 分钟
 					return optimismCacheData;
-				} else {
+				}
+				else {
 					// cache.set('GoogleCloudV4', [], 60 * 10); // 缓存 10 分钟
 					// cache.set('GoogleCloudV4Optimism', [], 60 * 10); // 缓存 10 分钟
 					// 乐观缓存也不存在数据时需要抛出异常

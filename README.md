@@ -168,17 +168,19 @@ GET https://cdn-ips.api.soraharu.com/health/ready
 
 ```json
 {
-  "status": "healthy",
-  "message": "All 19 CDN providers have valid cache",
-  "details": {
-    "cacheStatus": {
-      "totalProviders": 19,
-      "healthyProviders": 19,
-      "unhealthyProviders": 0,
-      "providers": [...]
-    }
-  },
-  "updatedAt": "2024-01-01T12:00:00.000Z"
+	"status": "healthy",
+	"message": "All 19 CDN providers have valid cache",
+	"details": {
+		"cacheStatus": {
+			"totalProviders": 19,
+			"healthyProviders": 19,
+			"unhealthyProviders": 0,
+			"providers": [
+				// ...
+			]
+		}
+	},
+	"updatedAt": "2024-01-01T12:00:00.000Z"
 }
 ```
 
@@ -186,17 +188,19 @@ GET https://cdn-ips.api.soraharu.com/health/ready
 
 ```json
 {
-  "status": "unhealthy",
-  "message": "3 out of 19 CDN providers have missing cache",
-  "details": {
-    "cacheStatus": {
-      "totalProviders": 19,
-      "healthyProviders": 16,
-      "unhealthyProviders": 3,
-      "providers": [...]
-    }
-  },
-  "updatedAt": "2024-01-01T12:00:00.000Z"
+	"status": "unhealthy",
+	"message": "3 out of 19 CDN providers have missing cache",
+	"details": {
+		"cacheStatus": {
+			"totalProviders": 19,
+			"healthyProviders": 16,
+			"unhealthyProviders": 3,
+			"providers": [
+				// ...
+			]
+		}
+	},
+	"updatedAt": "2024-01-01T12:00:00.000Z"
 }
 ```
 

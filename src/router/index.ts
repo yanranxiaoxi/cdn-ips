@@ -1,3 +1,4 @@
+import type { Venation } from '../utils/venation';
 import { CONFIG } from '../config/config';
 import cache from '../controller/cache.controller';
 import health from '../controller/health.controller';
@@ -6,7 +7,6 @@ import scheduler from '../controller/scheduler.controller';
 import api from '../middleware/api.middleware';
 import parameterMid from '../middleware/parameter.middleware';
 import logger from '../utils/logger';
-import type { Venation } from '../utils/venation';
 
 export default async (ven: Venation) => {
 	await ven.router('', api(), parameterMid).then((sub) => {
@@ -27,7 +27,8 @@ export default async (ven: Venation) => {
 		if (CONFIG.enableCachePreupdate) {
 			sub.get('/cache/preupdate', cache.preupdate);
 			logger.info('Cache preupdate endpoint is enabled');
-		} else {
+		}
+		else {
 			logger.info('Cache preupdate endpoint is disabled by configuration');
 		}
 	});

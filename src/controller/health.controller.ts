@@ -1,6 +1,6 @@
+import type { IContext } from '../utils/interface';
 import { cache } from '../main/flushData';
 import { EProviders } from '../main/main';
-import type { IContext } from '../utils/interface';
 import { Controller } from './controller';
 
 interface HealthStatus {
@@ -89,7 +89,8 @@ class Health extends Controller {
 			const isHealthy = missingCaches.length === 0;
 			if (isHealthy) {
 				healthyCount++;
-			} else {
+			}
+			else {
 				unhealthyCount++;
 			}
 

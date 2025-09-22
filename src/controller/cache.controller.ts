@@ -1,29 +1,30 @@
+import type { IContext } from '../utils/interface';
 import {
 	cache,
-	flushALTERNcloud,
-	flushALTERNcloudV4,
-	flushALTERNcloudV6,
 	flushAkamai,
 	flushAkamaiV4,
 	flushAkamaiV6,
+	flushALTERNcloud,
+	flushALTERNcloudV4,
+	flushALTERNcloudV6,
 	flushArvancloud,
 	flushArvancloudV4,
 	flushArvancloudV6,
 	flushBunny,
 	flushBunnyV4,
 	flushBunnyV6,
-	flushCDN77,
-	flushCDN77V4,
-	flushCDN77V6,
 	flushCacheFly,
 	flushCacheFlyV4,
 	flushCacheFlyV6,
-	flushCloudFront,
-	flushCloudFrontV4,
-	flushCloudFrontV6,
+	flushCDN77,
+	flushCDN77V4,
+	flushCDN77V6,
 	flushCloudflare,
 	flushCloudflareV4,
 	flushCloudflareV6,
+	flushCloudFront,
+	flushCloudFrontV4,
+	flushCloudFrontV6,
 	flushEdgeOne,
 	flushEdgeOneV4,
 	flushEdgeOneV6,
@@ -56,7 +57,6 @@ import {
 	flushQUICcloudV6,
 } from '../main/flushData';
 import { EProviders, EVersion } from '../main/main';
-import type { IContext } from '../utils/interface';
 import logger from '../utils/logger';
 import { Controller } from './controller';
 
@@ -104,8 +104,8 @@ class Cache extends Controller {
 		const results = await this.updateCacheForProviders(Object.values(EProviders), EVersion.ALL, false);
 
 		// 统计结果
-		const totalUpdated = results.filter((r) => r.success).length;
-		const totalFailed = results.filter((r) => !r.success).length;
+		const totalUpdated = results.filter(r => r.success).length;
+		const totalFailed = results.filter(r => !r.success).length;
 
 		const response: CacheUpdateResponse = {
 			success: totalFailed === 0,
@@ -224,7 +224,8 @@ class Cache extends Controller {
 				});
 
 				logger.info(`Cache updated for ${provider} ${task.version}: ${ips.length} IPs in ${duration}ms`);
-			} catch (error) {
+			}
+			catch (error) {
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				results.push({
 					provider,
