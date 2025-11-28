@@ -15,7 +15,7 @@ export interface IContext extends ITransports {
 	method: string;
 	requestParams: Record<string, unknown>;
 	requestFiles: Record<string, unknown>;
-	getQuery: Record<string, unknown>;
+	getQuery: URLSearchParams;
 	routerParams: Record<string, unknown>;
 	logger: Logger;
 	body: unknown;

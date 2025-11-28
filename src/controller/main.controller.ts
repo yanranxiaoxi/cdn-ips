@@ -6,9 +6,9 @@ import { Controller } from './controller';
 class Main extends Controller {
 	public async get(ctx: IContext) {
 		// 输入长度限制
-		const providersParam = (ctx.getQuery.providers as string) || Object.values(EProviders).join(',');
-		const versionParam = (ctx.getQuery.version as string) || EVersion.ALL;
-		const formatParam = (ctx.getQuery.format as string) || EFormat.JSON;
+		const providersParam = ctx.getQuery.get('providers') || Object.values(EProviders).join(',');
+		const versionParam = ctx.getQuery.get('version') || EVersion.ALL;
+		const formatParam = ctx.getQuery.get('format') || EFormat.JSON;
 
 		// 验证输入长度
 		if (providersParam.length > 1000) {
