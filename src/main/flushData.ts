@@ -14,7 +14,7 @@ const CACHE_CONFIG = {
 	OPTIMISM_TTL: 60 * 60 * 24 * 7, // 7 天
 } as const;
 
-export const cache = new NodeCache({
+export const cache = new NodeCache<Array<string>>({
 	maxKeys: CACHE_CONFIG.MAX_KEYS,
 	stdTTL: CACHE_CONFIG.STD_TTL,
 	checkperiod: CACHE_CONFIG.CHECK_PERIOD,

@@ -2,7 +2,7 @@
 	"name": "cdn-ips",
 	"type": "module",
 	"version": "1.0.0",
-	"packageManager": "pnpm@10.17.0",
+	"packageManager": "pnpm@10.26.1",
 	"main": "index.js",
 	"engines": {
 		"node": ">=20.5.0"
