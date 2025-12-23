@@ -61,6 +61,8 @@ class Main extends Controller {
 			case EFormat.COMMA:
 			case EFormat.LINE:
 			case EFormat.SPACE:
+			case EFormat.SINGLE_QUOTE_COMMA:
+			case EFormat.DOUBLE_QUOTE_COMMA:
 			case EFormat.JSON_ARRAY_WITHOUT_SQUARE_BRACKETS: {
 				ctx.res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 				break;
