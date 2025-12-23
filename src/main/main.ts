@@ -52,12 +52,16 @@ import {
 	flushMedianova,
 	flushMedianovaV4,
 	flushMedianovaV6,
+	flushPrivate,
+	flushPrivateV4,
+	flushPrivateV6,
 	flushQUICcloud,
 	flushQUICcloudV4,
 	flushQUICcloudV6,
 } from './flushData';
 
 export enum EProviders {
+	PRIVATE = 'Private',
 	CLOUDFLARE = 'Cloudflare',
 	EDGEONE = 'EdgeOne',
 	FASTLY = 'Fastly',
@@ -151,6 +155,7 @@ async function matchVersionFn(
 
 // Provider 函数映射，减少重复代码
 const PROVIDER_FUNCTIONS = {
+	[EProviders.PRIVATE]: { all: flushPrivate, v4: flushPrivateV4, v6: flushPrivateV6 },
 	[EProviders.CLOUDFLARE]: { all: flushCloudflare, v4: flushCloudflareV4, v6: flushCloudflareV6 },
 	[EProviders.EDGEONE]: { all: flushEdgeOne, v4: flushEdgeOneV4, v6: flushEdgeOneV6 },
 	[EProviders.FASTLY]: { all: flushFastly, v4: flushFastlyV4, v6: flushFastlyV6 },
