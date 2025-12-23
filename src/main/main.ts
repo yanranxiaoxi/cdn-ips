@@ -92,6 +92,9 @@ export enum EFormat {
 	COMMA = 'comma',
 	SPACE = 'space',
 	LINE = 'line',
+	DOUBLE_QUOTE_COMMA = 'double-quote-comma',
+	SINGLE_QUOTE_COMMA = 'single-quote-comma',
+	/** @deprecated Use DOUBLE_QUOTE_COMMA instead */
 	JSON_ARRAY_WITHOUT_SQUARE_BRACKETS = 'json-array-without-square-brackets',
 	JSON = 'json',
 	JSON_TRANSPOSED = 'json-transposed',
@@ -235,8 +238,12 @@ export async function getTransformedData(providers: EProviders[], version: EVers
 		case EFormat.LINE: {
 			return (await getPlainObject(providers, version)).join('\n');
 		}
+		case EFormat.DOUBLE_QUOTE_COMMA:
 		case EFormat.JSON_ARRAY_WITHOUT_SQUARE_BRACKETS: {
 			return `${(await getPlainObject(providers, version)).map(item => `"${item}"`).join(',')}`;
+		}
+		case EFormat.SINGLE_QUOTE_COMMA: {
+			return `${(await getPlainObject(providers, version)).map(item => `'${item}'`).join(',')}`;
 		}
 		case EFormat.JSON: {
 			return JSON.stringify(await getCompositeObject(providers, version));
