@@ -1,11 +1,10 @@
 {
 	"compilerOptions": {
 		"target": "esnext",
-		"baseUrl": "./",
-		"module": "commonjs",
-		"moduleResolution": "node",
+		"module": "esnext",
+		"moduleResolution": "bundler",
 		"paths": {
-			"@/*": ["src/*"]
+			"@/*": ["./src/*"]
 		},
 		"resolveJsonModule": true,
 		"strict": true,
