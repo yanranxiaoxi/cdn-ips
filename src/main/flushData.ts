@@ -128,7 +128,7 @@ async function getFromParent(name: string, parentFn: () => Promise<Array<string>
 }
 
 export async function flushPrivateV4(): Promise<Array<string>> {
-	return returnDirectly('PrivateV4', ['10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16']);
+	return returnDirectly('PrivateV4', ['10.0.0.0/8', '100.64.0.0/10', '127.0.0.1/32', '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16']);
 }
 
 export async function flushPrivateV6(): Promise<Array<string>> {
