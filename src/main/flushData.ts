@@ -357,20 +357,23 @@ export async function flushArvancloud(): Promise<Array<string>> {
 }
 
 export async function flushF5CDNV4(): Promise<Array<string>> {
-	return await getByLines('F5CDNV4', 'https://docs.cloud.f5.com/docs-v2/downloads/platform/reference/network-cloud-ref/ips-domains.txt', [
-		{
-			start: '### Public IPv4 Subnet Ranges for F5 Content Distribution Network Services',
-			end: '### Public IPv4 Addresses for F5 Secondary DNS Zone Transfer',
-		},
-	]);
+	return await getFromParent('F5CDNV4', flushF5CDN);
 }
 
 export async function flushF5CDNV6(): Promise<Array<string>> {
-	return returnDirectly('F5CDNV6'); // F5 CDN 没有提供回源 IPv6 列表
+	return await getFromParent('F5CDNV6', flushF5CDN);
 }
 
 export async function flushF5CDN(): Promise<Array<string>> {
-	return await getFromSub('F5CDN', flushF5CDNV4, flushF5CDNV6);
+	return await getByJson(
+		'F5CDN',
+		'https://docs.cloud.f5.com/docs-v2/downloads/platform/reference/network-cloud-ref/ips-domains.json',
+		['ipv4_cidrs'],
+		[],
+		(data: { services: { cdn: { ipv4_cidrs: Array<string> } } }) => {
+			return data.services.cdn;
+		},
+	);
 }
 
 export async function flushImpervaV4(): Promise<Array<string>> {
