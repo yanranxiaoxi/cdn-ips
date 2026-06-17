@@ -30,6 +30,10 @@ export function getUuid() {
 	return randomUUID().replace(/-/g, '');
 }
 
+export function traceId() {
+	return randomUUID().replace(/-/g, '');
+}
+
 /**
  * HTTP GET 请求
  *

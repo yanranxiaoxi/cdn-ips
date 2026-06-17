@@ -1,38 +1,30 @@
-import type { Configuration } from 'log4js';
-import { join } from 'node:path';
-import log4js from 'log4js';
-
+import os from 'node:os';
+import path from 'node:path';
+import winston from 'winston';
 import { CONFIG } from '../config/config';
+import 'winston-daily-rotate-file';
 
-// 日志同时输出到控制台和文件
-const config: Configuration = {
-	appenders: {
-		file: {
-			type: 'dateFile',
-			filename: join('./logs/', CONFIG.projectName),
-			pattern: 'yyyy-MM-dd.log',
-			alwaysIncludePattern: true,
-		},
-		console: {
-			type: 'console',
-			layout: {
-				type: 'pattern',
-				pattern: '%[[%d{ISO8601}] %o[%p] [%X{customField}]%] - %m',
-			},
-		},
-	},
-	categories: {
-		default: {
-			appenders: ['file', 'console'],
-			level: 'info',
-		},
-	},
-};
+const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
+	filename: path.join('./logs/', CONFIG.projectName),
+	extension: '.log',
+	datePattern: 'YYYY-MM-DD',
+	maxSize: '1g',
+	maxFiles: '7d',
+});
 
-log4js.configure(config);
+function createLogger(label: string) {
+	return winston.createLogger({
+		defaultMeta: { serverName: os.hostname(), app: CONFIG.projectName, label },
+		level: CONFIG.logLevel.toLocaleLowerCase(),
+		format: winston.format.combine(
+			winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+			winston.format.printf(
+				info => `[${info.timestamp}] [${info.level}] ${[info.traceId ? `[${info.traceId}]` : '']}: ${info.message}`,
+			),
+		),
+		transports: [new winston.transports.Console(), dailyRotateFileTransport],
+	});
+}
 
-const logger = log4js.getLogger(CONFIG.projectName);
-logger.level = CONFIG.logLevel.toLocaleLowerCase();
-logger.addContext('customField', 'null');
-
+const logger = createLogger(CONFIG.projectName);
 export default logger;

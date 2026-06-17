@@ -1,6 +1,5 @@
-import type { Logger } from 'log4js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-
+import type { Logger } from 'winston';
 import type { IRequest, IResponse } from './venation/transport';
 
 export abstract class VenDriver {

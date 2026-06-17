@@ -1,5 +1,4 @@
-import type { Logger } from 'log4js';
-
+import type { Logger } from 'winston';
 import type { VenNodeDriver } from './driver';
 import { Router } from '../router';
 

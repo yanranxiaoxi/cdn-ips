@@ -6,10 +6,11 @@ import main from '../controller/main.controller';
 import scheduler from '../controller/scheduler.controller';
 import api from '../middleware/api.middleware';
 import parameterMid from '../middleware/parameter.middleware';
+import traceMid from '../middleware/trace.middleware';
 import logger from '../utils/logger';
 
 export default async (ven: Venation) => {
-	await ven.router('', api(), parameterMid).then((sub) => {
+	await ven.router('', traceMid, api(), parameterMid).then((sub) => {
 		// 基础接口
 		sub.get('', main.get);
 
