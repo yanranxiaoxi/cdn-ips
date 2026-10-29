@@ -14,14 +14,13 @@ GET https://cdn-ips.api.soraharu.com/
 
 | 参数名      | 类型                | 示例                 |
 | ----------- | ------------------- | -------------------- |
-| `providers` | `Array<EProviders>` | `Cloudflare,EdgeOne` |
+| `providers` | `Array<EProviders>` | `Cloudflare,Fastly`  |
 | `version`   | `EVersion`          | `v4`                 |
 | `format`    | `EFormat`           | `json-transposed`    |
 
 ```typescript
 export enum EProviders {
 	CLOUDFLARE = 'Cloudflare',
-	EDGEONE = 'EdgeOne',
 	FASTLY = 'Fastly',
 	GCORE = 'Gcore',
 	BUNNY = 'Bunny',

@@ -25,9 +25,6 @@ import {
 	flushCloudFront,
 	flushCloudFrontV4,
 	flushCloudFrontV6,
-	flushEdgeOne,
-	flushEdgeOneV4,
-	flushEdgeOneV6,
 	flushF5CDN,
 	flushF5CDNV4,
 	flushF5CDNV6,
@@ -253,7 +250,6 @@ class Cache extends Controller {
 		const PROVIDER_FUNCTIONS = {
 			[EProviders.PRIVATE]: { all: flushPrivate, v4: flushPrivateV4, v6: flushPrivateV6 },
 			[EProviders.CLOUDFLARE]: { all: flushCloudflare, v4: flushCloudflareV4, v6: flushCloudflareV6 },
-			[EProviders.EDGEONE]: { all: flushEdgeOne, v4: flushEdgeOneV4, v6: flushEdgeOneV6 },
 			[EProviders.FASTLY]: { all: flushFastly, v4: flushFastlyV4, v6: flushFastlyV6 },
 			[EProviders.GCORE]: { all: flushGcore, v4: flushGcoreV4, v6: flushGcoreV6 },
 			[EProviders.BUNNY]: { all: flushBunny, v4: flushBunnyV4, v6: flushBunnyV6 },

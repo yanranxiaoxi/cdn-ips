@@ -139,18 +139,6 @@ export async function flushPrivate(): Promise<Array<string>> {
 	return await getFromSub('Private', flushPrivateV4, flushPrivateV6);
 }
 
-export async function flushEdgeOneV4(): Promise<Array<string>> {
-	return await getByLines('EdgeOneV4', 'https://api.edgeone.ai/ips?version=v4');
-}
-
-export async function flushEdgeOneV6(): Promise<Array<string>> {
-	return await getByLines('EdgeOneV6', 'https://api.edgeone.ai/ips?version=v6');
-}
-
-export async function flushEdgeOne(): Promise<Array<string>> {
-	return await getByLines('EdgeOne', 'https://api.edgeone.ai/ips');
-}
-
 export async function flushCloudflareV4(): Promise<Array<string>> {
 	return await getByLines('CloudflareV4', 'https://www.cloudflare.com/ips-v4/#');
 }
